@@ -14,7 +14,8 @@ export type QuizLevel = 'EASY' | 'MEDIUM' | 'HARD';
 export interface Question {
   id: string;
   text: string;
-  options: string[];
+  questionType: string;
+  options: any; // Type-specific options structure
   category: QuizCategory;
   level: QuizLevel;
   points: number;

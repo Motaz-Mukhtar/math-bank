@@ -20,19 +20,17 @@ import {
   getCategories,
   type VideoCategory 
 } from "@/services/video.api";
+import { QuestionFormContainer } from "@/components/admin/QuestionFormContainer";
+import { QuestionList } from "@/components/admin/QuestionList";
 
 const AdminContentManager = () => {
   // Video categories list
   const [categories, setCategories] = useState<VideoCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Question state
-  const [questionText, setQuestionText] = useState("");
-  const [questionOptions, setQuestionOptions] = useState(["", "", "", ""]);
-  const [questionAnswer, setQuestionAnswer] = useState("");
-  const [questionCategory, setQuestionCategory] = useState<string>("");
-  const [questionLevel, setQuestionLevel] = useState<string>("");
-  const [questionPoints, setQuestionPoints] = useState("10");
+  // Question management state
+  const [editingQuestionId, setEditingQuestionId] = useState<string | undefined>();
+  const [refreshQuestionList, setRefreshQuestionList] = useState(0);
 
   // Video Category state
   const [categoryName, setCategoryName] = useState("");
@@ -65,58 +63,17 @@ const AdminContentManager = () => {
     }
   };
 
-  const handleAddQuestion = () => {
-    // Validation
-    if (!questionText.trim()) {
-      toast.error("نص السؤال مطلوب");
-      return;
-    }
+  const handleQuestionSuccess = () => {
+    setEditingQuestionId(undefined);
+    setRefreshQuestionList(prev => prev + 1);
+  };
 
-    if (questionOptions.some(opt => !opt.trim())) {
-      toast.error("جميع الخيارات مطلوبة");
-      return;
-    }
+  const handleQuestionEdit = (questionId: string) => {
+    setEditingQuestionId(questionId);
+  };
 
-    if (!questionAnswer.trim()) {
-      toast.error("الإجابة الصحيحة مطلوبة");
-      return;
-    }
-
-    if (!questionCategory) {
-      toast.error("الفئة مطلوبة");
-      return;
-    }
-
-    if (!questionLevel) {
-      toast.error("المستوى مطلوب");
-      return;
-    }
-
-    const points = parseInt(questionPoints);
-    if (isNaN(points) || points < 1) {
-      toast.error("النقاط يجب أن تكون رقم أكبر من 0");
-      return;
-    }
-
-    // TODO: API integration
-    console.log("Adding question:", {
-      text: questionText,
-      options: questionOptions,
-      answer: questionAnswer,
-      category: questionCategory,
-      level: questionLevel,
-      points,
-    });
-
-    toast.success("سيتم إضافة السؤال قريباً");
-    
-    // Reset form
-    setQuestionText("");
-    setQuestionOptions(["", "", "", ""]);
-    setQuestionAnswer("");
-    setQuestionCategory("");
-    setQuestionLevel("");
-    setQuestionPoints("10");
+  const handleQuestionCancel = () => {
+    setEditingQuestionId(undefined);
   };
 
   const handleAddVideoCategory = async () => {
@@ -217,7 +174,7 @@ const AdminContentManager = () => {
           <TabsList className="grid w-full grid-cols-3 font-cairo">
             <TabsTrigger value="question" className="gap-2">
               <HelpCircle className="w-4 h-4" />
-              إضافة سؤال
+              إدارة الأسئلة
             </TabsTrigger>
             <TabsTrigger value="category" className="gap-2">
               <FolderOpen className="w-4 h-4" />
@@ -231,96 +188,18 @@ const AdminContentManager = () => {
 
           {/* Add Question Tab */}
           <TabsContent value="question" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label className="font-cairo font-semibold">نص السؤال</Label>
-              <Textarea
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                placeholder="أدخل نص السؤال..."
-                className="font-cairo min-h-[80px]"
+            <QuestionFormContainer
+              questionId={editingQuestionId}
+              onSuccess={handleQuestionSuccess}
+              onCancel={editingQuestionId ? handleQuestionCancel : undefined}
+            />
+            
+            <div className="pt-6 border-t">
+              <QuestionList
+                key={refreshQuestionList}
+                onEdit={handleQuestionEdit}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label className="font-cairo font-semibold">الخيارات (4 خيارات)</Label>
-              <div className="grid grid-cols-2 gap-3">
-                {questionOptions.map((opt, idx) => (
-                  <Input
-                    key={idx}
-                    value={opt}
-                    onChange={(e) => {
-                      const newOpts = [...questionOptions];
-                      newOpts[idx] = e.target.value;
-                      setQuestionOptions(newOpts);
-                    }}
-                    placeholder={`الخيار ${idx + 1}`}
-                    className="font-cairo"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="font-cairo font-semibold">الإجابة الصحيحة</Label>
-              <Input
-                value={questionAnswer}
-                onChange={(e) => setQuestionAnswer(e.target.value)}
-                placeholder="أدخل الإجابة الصحيحة"
-                className="font-cairo"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="font-cairo font-semibold">الفئة</Label>
-                <Select value={questionCategory} onValueChange={setQuestionCategory}>
-                  <SelectTrigger className="font-cairo">
-                    <SelectValue placeholder="اختر الفئة" />
-                  </SelectTrigger>
-                  <SelectContent className="font-cairo">
-                    <SelectItem value="ADDITION">جمع</SelectItem>
-                    <SelectItem value="SUBTRACTION">طرح</SelectItem>
-                    <SelectItem value="MULTIPLICATION">ضرب</SelectItem>
-                    <SelectItem value="DIVISION">قسمة</SelectItem>
-                    <SelectItem value="COMPARISON">مقارنة</SelectItem>
-                    <SelectItem value="GEOMETRY">هندسة</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="font-cairo font-semibold">المستوى</Label>
-                <Select value={questionLevel} onValueChange={setQuestionLevel}>
-                  <SelectTrigger className="font-cairo">
-                    <SelectValue placeholder="اختر المستوى" />
-                  </SelectTrigger>
-                  <SelectContent className="font-cairo">
-                    <SelectItem value="EASY">سهل</SelectItem>
-                    <SelectItem value="MEDIUM">متوسط</SelectItem>
-                    <SelectItem value="HARD">صعب</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="font-cairo font-semibold">النقاط</Label>
-              <Input
-                type="number"
-                min="1"
-                value={questionPoints}
-                onChange={(e) => setQuestionPoints(e.target.value)}
-                className="font-cairo"
-              />
-            </div>
-
-            <Button
-              onClick={handleAddQuestion}
-              className="w-full gap-2 font-cairo font-bold active:scale-[0.97]"
-            >
-              <Plus className="w-4 h-4" />
-              إضافة السؤال
-            </Button>
           </TabsContent>
 
           {/* Add Video Category Tab */}

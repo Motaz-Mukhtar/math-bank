@@ -5,7 +5,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { startSession, getNextQuestion, submitAnswer, completeSession } from "@/services/quiz.api";
-import type { QuizSession, QuizQuestion } from "@/services/quiz.api";
+import type { StartSessionResponse, NextQuestionResponse } from "@/services/quiz.api";
+import { QuestionRenderer } from "@/components/quiz";
+import { Question } from "@/types/question";
 import { toast } from "sonner";
 
 type Difficulty = "EASY" | "MEDIUM" | "HARD";
@@ -105,10 +107,11 @@ const QuizzesPage = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
-  const [session, setSession] = useState<QuizSession | null>(null);
-  const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
+  const [session, setSession] = useState<StartSessionResponse | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<NextQuestionResponse | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answered, setAnswered] = useState<number | null>(null);
+  const [answered, setAnswered] = useState(false);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -125,10 +128,14 @@ const QuizzesPage = () => {
       setCorrectCount(0);
       setFinished(false);
       
-      // Fetch first question
-      const question = await getNextQuestion(newSession.id);
-      setCurrentQuestion(question);
-      setAnswered(null);
+      // The first question is included in the session response
+      setCurrentQuestion({
+        currentQuestion: newSession.currentQuestion,
+        totalQuestions: newSession.totalQuestions,
+        question: newSession.question
+      });
+      setAnswered(false);
+      setIsCorrect(null);
     } catch (error: any) {
       console.error("Failed to start quiz:", error);
       toast.error(error.response?.data?.error || "فشل بدء الاختبار");
@@ -145,22 +152,23 @@ const QuizzesPage = () => {
     }
   };
 
-  const handleAnswer = async (idx: number) => {
-    if (answered !== null || !session || !currentQuestion) return;
+  const handleSubmit = async (userAnswer: string) => {
+    if (answered || !session || !currentQuestion) return;
     
-    setAnswered(idx);
-    const isCorrect = idx === currentQuestion.correctAnswerIndex;
-    
-    if (isCorrect) {
-      setCorrectCount((c) => c + 1);
-    }
+    setAnswered(true);
 
     try {
       // Submit answer to backend
-      await submitAnswer(session.id, currentQuestion.id, idx);
+      const result = await submitAnswer(session.sessionId, currentQuestion.question.id, userAnswer);
+      setIsCorrect(result.isCorrect);
+      
+      if (result.isCorrect) {
+        setCorrectCount((c) => c + 1);
+      }
     } catch (error: any) {
       console.error("Failed to submit answer:", error);
-      // Don't show error to user, continue with quiz
+      toast.error("فشل إرسال الإجابة");
+      setAnswered(false);
     }
   };
 
@@ -170,10 +178,11 @@ const QuizzesPage = () => {
     if (currentIndex + 1 < 10) { // Fixed 10 questions per session
       try {
         setLoading(true);
-        const question = await getNextQuestion(session.id);
+        const question = await getNextQuestion(session.sessionId);
         setCurrentQuestion(question);
         setCurrentIndex((i) => i + 1);
-        setAnswered(null);
+        setAnswered(false);
+        setIsCorrect(null);
       } catch (error: any) {
         console.error("Failed to get next question:", error);
         toast.error("فشل تحميل السؤال التالي");
@@ -184,7 +193,7 @@ const QuizzesPage = () => {
       // Complete session
       try {
         setLoading(true);
-        await completeSession(session.id);
+        await completeSession(session.sessionId);
         await refreshUser(); // Refresh user to get updated points
         setFinished(true);
         toast.success(`تم إضافة ${correctCount * pointsPerCorrect} نقطة إلى رصيدك!`);
@@ -203,7 +212,8 @@ const QuizzesPage = () => {
     setSession(null);
     setCurrentQuestion(null);
     setCurrentIndex(0);
-    setAnswered(null);
+    setAnswered(false);
+    setIsCorrect(null);
     setCorrectCount(0);
     setFinished(false);
   };
@@ -213,7 +223,8 @@ const QuizzesPage = () => {
     setSession(null);
     setCurrentQuestion(null);
     setCurrentIndex(0);
-    setAnswered(null);
+    setAnswered(false);
+    setIsCorrect(null);
     setCorrectCount(0);
     setFinished(false);
   };
@@ -335,7 +346,7 @@ const QuizzesPage = () => {
                 <div
                   className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{
-                    width: `${((currentIndex + (answered !== null ? 1 : 0)) / 10) * 100}%`,
+                    width: `${((currentIndex + (answered ? 1 : 0)) / 10) * 100}%`,
                     backgroundColor: selectedCategory.color,
                   }}
                 />
@@ -346,36 +357,24 @@ const QuizzesPage = () => {
                 <div className="flex items-start gap-3">
                   <span className="text-2xl shrink-0">{selectedCategory.emoji}</span>
                   <h2 className="font-cairo font-bold text-foreground text-lg md:text-xl leading-relaxed">
-                    {currentQuestion.questionText}
+                    {currentQuestion.question.text}
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {currentQuestion.options.map((opt, idx) => {
-                    let cls =
-                      "font-cairo font-semibold rounded-xl px-5 py-4 border-2 transition-all duration-200 text-start ";
-                    if (answered === null) {
-                      cls += "border-border hover:border-primary hover:bg-primary/5 cursor-pointer active:scale-[0.97]";
-                    } else if (idx === currentQuestion.correctAnswerIndex) {
-                      cls += "border-[hsl(var(--success))] bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]";
-                    } else if (idx === answered) {
-                      cls += "border-destructive bg-destructive/10 text-destructive";
-                    } else {
-                      cls += "border-border opacity-40";
-                    }
+                {/* Use QuestionRenderer for all question types */}
+                <QuestionRenderer 
+                  question={{
+                    ...currentQuestion.question,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                  } as Question} 
+                  onSubmit={handleSubmit} 
+                />
 
-                    return (
-                      <button key={idx} onClick={() => handleAnswer(idx)} className={cls} disabled={answered !== null || loading}>
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {answered !== null && (
+                {answered && isCorrect !== null && (
                   <div className="flex items-center justify-between pt-2">
                     <div className="flex items-center gap-2">
-                      {answered === currentQuestion.correctAnswerIndex ? (
+                      {isCorrect ? (
                         <>
                           <CheckCircle className="w-5 h-5 text-[hsl(var(--success))]" />
                           <span className="font-cairo font-bold text-[hsl(var(--success))]">إجابة صحيحة! +{pointsPerCorrect}</span>
