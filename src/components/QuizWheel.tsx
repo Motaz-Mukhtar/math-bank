@@ -1,13 +1,50 @@
 import { useState, useRef } from "react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { spin as spinWheel, SpinWheelResponse, startSession, submitAnswer } from "@/services/wheel.api";
+import { QuizCategory, BaseQuestion } from "@/types/question";
+import { QuestionRenderer } from "./quiz";
+import { Question } from "@/types";
+import { ArrowLeft, CheckCircle, XCircle } from "lucide-react";
+import { toast } from "sonner";
+
+// FRACTIONS = 'FRACTIONS',
+// MEASUREMENT = 'MEASUREMENT',
+// TIME = 'TIME',
+// PLACE_VALUE = 'PLACE_VALUE',
+// PATTERNS = 'PATTERNS',
+// DATA = 'DATA',
 
 const segments = [
-  { label: "جمع", color: "hsl(174, 58%, 40%)" },
-  { label: "طرح", color: "hsl(28, 92%, 58%)" },
-  { label: "ضرب", color: "hsl(340, 72%, 58%)" },
-  { label: "قسمة", color: "hsl(190, 60%, 50%)" },
-  { label: "مقارنة", color: "hsl(38, 92%, 55%)" },
-  { label: "أشكال", color: "hsl(142, 60%, 45%)" },
+  {
+    id: "ADDITION" as QuizCategory,
+    label: "جمع",
+    color: "hsl(174, 58%, 40%)"
+  },
+  {
+    id: "SUBTRACTION" as QuizCategory,
+    label: "طرح",
+    color: "hsl(28, 92%, 58%)"
+  },
+  {
+    id: "MULTIPLICATION" as QuizCategory,
+    label: "ضرب",
+    color: "hsl(340, 72%, 58%)"
+  },
+  {
+    id: "DIVISION" as QuizCategory,
+    label: "قسمة",
+    color: "hsl(190, 60%, 50%)"
+  },
+  {
+    id: "COMPARISON" as QuizCategory,
+    label: "مقارنة",
+    color: "hsl(38, 92%, 55%)"
+  },
+  {
+    id: "GEOMETRY" as QuizCategory,
+    label: "أشكال",
+    color: "hsl(142, 60%, 45%)"
+  },
 ];
 
 const questions: Record<string, { q: string; options: string[]; answer: number }> = {
@@ -24,37 +61,83 @@ const QuizWheel = () => {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [answered, setAnswered] = useState<number | null>(null);
+  const [answered, setAnswered] = useState<string | null>(null);
   const [score, setScore] = useState(0);
+
+  const [isCorrect, setIsCorrect] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [question, setQuestion] = useState<SpinWheelResponse | null>(null);
+  const [pointEarned, setPointEarned] = useState<number>(0);
   const wheelRef = useRef<SVGSVGElement>(null);
 
   const segAngle = 360 / segments.length;
 
-  const spin = () => {
+  const spin = async () => {
     if (spinning) return;
     setSpinning(true);
     setSelected(null);
     setAnswered(null);
+    setQuestion(null);
 
     const extraSpins = 360 * 5;
     const randomAngle = Math.random() * 360;
     const newRotation = rotation + extraSpins + randomAngle;
     setRotation(newRotation);
 
-    setTimeout(() => {
-      const normalizedAngle = (360 - (newRotation % 360)) % 360;
+    setTimeout(async () => {
+      // SVG 0° is at 3 o'clock; pointer is at 12 o'clock (top), which is 270° in SVG.
+      // We add 90° to shift the reference so that segment 0 aligns with the top pointer.
+      const finalAngle = newRotation % 360;
+      const normalizedAngle = ((360 - finalAngle) + 270) % 360;
       const idx = Math.floor(normalizedAngle / segAngle) % segments.length;
-      setSelected(segments[idx].label);
+      setSelected(segments[idx].id);
+
+      const wheelSession = await getWheelSession();
+      console.log(wheelSession);
+
+      const response = await spinWheel(wheelSession.sessionId, segments[idx].id);
+
+      setQuestion(response);
       setSpinning(false);
     }, 3200);
+
   };
 
-  const handleAnswer = (idx: number) => {
-    if (!selected || answered !== null) return;
-    setAnswered(idx);
-    if (idx === questions[selected].answer) {
-      setScore((s) => s + 10);
+  const getWheelSession = async (): Promise<{ sessionId: string }> => {
+    if (localStorage.getItem('wheelSessionId'))
+      return JSON.parse(localStorage.getItem('wheelSessionId') || '{}');
+
+    const response = await startSession();
+
+    localStorage.setItem("wheelSessionId", JSON.stringify(response));
+
+    return response;
+  }
+
+  const handleAnswer = async (userAnswer: string) => {
+    // Submit answer to backend
+    const wheelSession = await getWheelSession();
+
+    if (answered || !wheelSession || !question) return;
+
+    setIsLoading(true);
+    setAnswered(true);
+    setPointEarned(question.points);
+
+    try {
+
+      const result = await submitAnswer(wheelSession.sessionId, question.id, userAnswer);
+      setIsCorrect(result.isCorrect);
+
+    } catch (error: any) {
+      console.error("Failed to submit answer:", error);
+
+      toast.error("فشل إرسال الإجابة");
+      setAnswered(false);
+    } finally {
+      setIsLoading(false);
     }
+
   };
 
   const currentQ = selected ? questions[selected] : null;
@@ -139,36 +222,44 @@ const QuizWheel = () => {
               <span className="font-cairo font-extrabold text-primary text-2xl tabular-nums">{score}</span>
             </div>
 
-            {currentQ ? (
+            {question ? (
               <div className="bg-background rounded-2xl p-6 shadow-sm space-y-5">
-                <p className="font-cairo font-bold text-foreground text-lg leading-relaxed">
-                  {currentQ.q}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {currentQ.options.map((opt, idx) => {
-                    let cls =
-                      "font-cairo font-semibold rounded-xl px-4 py-3 border-2 transition-all duration-200 active:scale-[0.97] ";
-                    if (answered === null) {
-                      cls += "border-border hover:border-primary hover:bg-primary/5 cursor-pointer";
-                    } else if (idx === currentQ.answer) {
-                      cls += "border-[hsl(var(--success))] bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]";
-                    } else if (idx === answered) {
-                      cls += "border-destructive bg-destructive/10 text-destructive";
-                    } else {
-                      cls += "border-border opacity-50";
-                    }
 
-                    return (
-                      <button key={idx} onClick={() => handleAnswer(idx)} className={cls}>
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-                {answered !== null && (
-                  <p className={`font-cairo font-bold text-center ${answered === currentQ.answer ? "text-[hsl(var(--success))]" : "text-destructive"}`}>
-                    {answered === currentQ.answer ? "🎉 إجابة صحيحة! +١٠ نقاط" : "❌ حاول مرة أخرى"}
-                  </p>
+                <QuestionRenderer
+                  question={{
+                    ...question,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                  } as Question}
+                  onSubmit={handleAnswer}
+                />
+                {answered && isCorrect !== null && (
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center gap-2">
+                      {!isLoading && (isCorrect ? (
+                        <>
+
+                          <CheckCircle className="w-5 h-5 text-[hsl(var(--success))]" />
+                          <span className="font-cairo font-bold text-[hsl(var(--success))]">إجابة صحيحة! +{pointEarned}</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-5 h-5 text-destructive" />
+                          <span className="font-cairo font-bold text-destructive">إجابة خاطئة</span>
+                        </>
+                      ))}
+                    </div>
+                    <button
+                      disabled={isLoading}
+                      className="flex items-center gap-1.5 gradient-hero text-primary-foreground
+                                 font-cairo font-bold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md
+                                 transition-shadow active:scale-[0.97] disabled:opacity-50"
+                      onClick={spin}
+                    >
+                      {isLoading ? "جاري التحميل..." : "أدر العجلة مرة أخرى"}
+
+                    </button>
+                  </div>
                 )}
               </div>
             ) : (

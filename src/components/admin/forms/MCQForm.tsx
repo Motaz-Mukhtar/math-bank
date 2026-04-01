@@ -48,7 +48,7 @@ export function MCQForm({ value, onChange }: MCQFormProps) {
     // Validate that answer is in options array (non-empty options only)
     const validOptions = options.filter(opt => opt.trim() !== '');
     const isAnswerValid = validOptions.includes(answer);
-    
+
     onChange({
       options,
       answer: isAnswerValid ? answer : '',
@@ -72,17 +72,17 @@ export function MCQForm({ value, onChange }: MCQFormProps) {
   return (
     <div className="space-y-4">
       <div className="space-y-3">
-        <Label className="text-base font-semibold">Options</Label>
+        <Label className="text-base font-semibold">الخيارات</Label>
         {options.map((option, index) => (
           <div key={index} className="space-y-1">
             <Label htmlFor={`option-${index}`} className="text-sm">
-              Option {index + 1}
+              الخيار {index + 1}
             </Label>
             <Input
               id={`option-${index}`}
               value={option}
               onChange={(e) => handleOptionChange(index, e.target.value)}
-              placeholder={`Enter option ${index + 1}`}
+              placeholder={`أدخل الخيار ${index + 1}`}
               className="w-full"
             />
           </div>
@@ -91,7 +91,7 @@ export function MCQForm({ value, onChange }: MCQFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="correct-answer" className="text-base font-semibold">
-          Correct Answer
+          الإجابة الصحيحة
         </Label>
         <Select
           value={answer}
@@ -99,7 +99,7 @@ export function MCQForm({ value, onChange }: MCQFormProps) {
           disabled={validOptions.length === 0}
         >
           <SelectTrigger id="correct-answer" className="w-full">
-            <SelectValue placeholder="Select correct answer" />
+            <SelectValue placeholder="اختر الإجابة الصحيحة" />
           </SelectTrigger>
           <SelectContent>
             {validOptions.map((option, index) => (
@@ -111,7 +111,7 @@ export function MCQForm({ value, onChange }: MCQFormProps) {
         </Select>
         {validOptions.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Enter at least one option to select an answer
+            أدخل خيارًا واحدًا على الأقل ﻹختيار إجابة
           </p>
         )}
       </div>

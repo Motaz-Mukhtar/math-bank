@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
+import LeaderboardSection from "@/components/LeaderboardSection";
 
 const AuthGate = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -53,7 +54,8 @@ const Index = () => (
     <AuthGate>
       <VideosSection />
       <QuizWheel />
-      <Leaderboard />
+      {/* <Leaderboard /> */}
+      <LeaderboardSection />
     </AuthGate>
     <Footer />
   </>

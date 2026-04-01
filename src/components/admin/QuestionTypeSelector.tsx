@@ -31,19 +31,19 @@ interface QuestionTypeSelectorProps {
 }
 
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
-  [QuestionType.MCQ]: 'Multiple Choice Question',
-  [QuestionType.FILL_BLANK]: 'Fill in the Blank',
-  [QuestionType.SORT_ORDER]: 'Sort Order',
-  [QuestionType.MATCHING]: 'Matching Pairs',
-  [QuestionType.VISUAL_MCQ]: 'Visual Multiple Choice',
-  [QuestionType.CLOCK_READ]: 'Clock Reading',
+  [QuestionType.MCQ]: 'اختيار من متعدد',
+  [QuestionType.FILL_BLANK]: 'املأ الفراغ',
+  [QuestionType.SORT_ORDER]: 'ترتيب',
+  [QuestionType.MATCHING]: 'مطابقة',
+  [QuestionType.VISUAL_MCQ]: 'اختيار من متعدد بالصور',
+  [QuestionType.CLOCK_READ]: 'قراءة الساعة',
 };
 
 export function QuestionTypeSelector({ value, onValueChange }: QuestionTypeSelectorProps) {
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select question type" />
+        <SelectValue placeholder="اختر نوع السؤال" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={QuestionType.MCQ}>

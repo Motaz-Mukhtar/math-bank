@@ -65,57 +65,57 @@ export function FillBlankForm({ value, onChange }: FillBlankFormProps) {
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="before-text" className="text-base font-semibold">
-          Before Text
+          النص قبل الفراغ
         </Label>
         <Input
           id="before-text"
           value={before}
           onChange={(e) => setBefore(e.target.value)}
-          placeholder="Enter text before the blank (e.g., '2 + 2 = ')"
+          placeholder="أدخل النص قبل الفراغ (مثال: '2 + 2 = ')"
           className="w-full"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="after-text" className="text-base font-semibold">
-          After Text <span className="text-sm font-normal text-muted-foreground">(Optional)</span>
+          النص بعد الفراغ <span className="text-sm font-normal text-muted-foreground">(اختياري)</span>
         </Label>
         <Input
           id="after-text"
           value={after}
           onChange={(e) => setAfter(e.target.value)}
-          placeholder="Enter text after the blank (e.g., ' apples')"
+          placeholder="أدخل النص بعد الفراغ (مثال: ' تفاحات')"
           className="w-full"
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="pad-type" className="text-base font-semibold">
-          Input Type
+          نوع اﻹجابة
         </Label>
         <Select
           value={pad}
           onValueChange={(value) => setPad(value as 'numeric' | 'fraction')}
         >
           <SelectTrigger id="pad-type" className="w-full">
-            <SelectValue placeholder="Select input type" />
+            <SelectValue placeholder="اختر نوع الإدخال" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="numeric">Numeric (0-9)</SelectItem>
-            <SelectItem value="fraction">Fraction (numerator/denominator)</SelectItem>
+            <SelectItem value="numeric">رقمي (0-9)</SelectItem>
+            <SelectItem value="fraction">كسر (بسط/مقام)</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="answer-value" className="text-base font-semibold">
-          Answer
+          اﻹجابة
         </Label>
         <Input
           id="answer-value"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
-          placeholder={pad === 'numeric' ? 'Enter numeric answer (e.g., 4)' : 'Enter fraction answer (e.g., 1/2)'}
+          placeholder={pad === 'numeric' ? 'أدخل الإجابة الرقمية (مثال: 4)' : 'أدخل الإجابة الكسرية (مثال: 1/2)'}
           className="w-full"
         />
       </div>

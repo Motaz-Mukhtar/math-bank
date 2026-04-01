@@ -65,37 +65,37 @@ interface Category {
 
 const categories: Category[] = [
   {
-    id: "addition",
+    id: "ADDITION",
     label: "الجمع",
     emoji: "➕",
     color: "hsl(var(--primary))",
   },
   {
-    id: "subtraction",
+    id: "SUBTRACTION",
     label: "الطرح",
     emoji: "➖",
     color: "hsl(var(--secondary))",
   },
   {
-    id: "multiplication",
+    id: "MULTIPLICATION",
     label: "الضرب",
     emoji: "✖️",
     color: "hsl(var(--accent))",
   },
   {
-    id: "division",
+    id: "DIVISION",
     label: "القسمة",
     emoji: "➗",
     color: "hsl(190, 60%, 50%)",
   },
   {
-    id: "comparison",
+    id: "COMPARISON",
     label: "المقارنة",
     emoji: "⚖️",
     color: "hsl(var(--warning))",
   },
   {
-    id: "geometry",
+    id: "GEOMETRY",
     label: "الأشكال الهندسية",
     emoji: "📐",
     color: "hsl(var(--success))",
@@ -127,7 +127,7 @@ const QuizzesPage = () => {
       setCurrentIndex(0);
       setCorrectCount(0);
       setFinished(false);
-      
+
       // The first question is included in the session response
       setCurrentQuestion({
         currentQuestion: newSession.currentQuestion,
@@ -154,14 +154,14 @@ const QuizzesPage = () => {
 
   const handleSubmit = async (userAnswer: string) => {
     if (answered || !session || !currentQuestion) return;
-    
+
     setAnswered(true);
 
     try {
       // Submit answer to backend
       const result = await submitAnswer(session.sessionId, currentQuestion.question.id, userAnswer);
       setIsCorrect(result.isCorrect);
-      
+
       if (result.isCorrect) {
         setCorrectCount((c) => c + 1);
       }
@@ -362,13 +362,13 @@ const QuizzesPage = () => {
                 </div>
 
                 {/* Use QuestionRenderer for all question types */}
-                <QuestionRenderer 
+                <QuestionRenderer
                   question={{
                     ...currentQuestion.question,
                     createdAt: new Date(),
                     updatedAt: new Date()
-                  } as Question} 
-                  onSubmit={handleSubmit} 
+                  } as Question}
+                  onSubmit={handleSubmit}
                 />
 
                 {answered && isCorrect !== null && (
@@ -416,8 +416,8 @@ const QuizzesPage = () => {
                   {correctCount === 10
                     ? "ممتاز! درجة كاملة!"
                     : correctCount >= 6
-                    ? "أحسنت! نتيجة جيدة"
-                    : "حاول مرة أخرى"}
+                      ? "أحسنت! نتيجة جيدة"
+                      : "حاول مرة أخرى"}
                 </h2>
 
                 <span className={`inline-block font-cairo text-sm font-bold px-3 py-1 rounded-full ${difficultyMap[selectedDifficulty].bgColor} ${difficultyMap[selectedDifficulty].color}`}>

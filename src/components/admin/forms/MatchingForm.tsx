@@ -59,12 +59,12 @@ export function MatchingForm({ value, onChange }: MatchingFormProps) {
     const validPairs = pairs.filter(
       pair => pair.left.trim() !== '' && pair.right.trim() !== ''
     );
-    
+
     // Generate answer as pipe-separated "left:right" pairs
     const answer = validPairs.length === 4
       ? validPairs.map(pair => `${pair.left}:${pair.right}`).join('|')
       : '';
-    
+
     onChange({
       pairs,
       answer,
@@ -84,34 +84,34 @@ export function MatchingForm({ value, onChange }: MatchingFormProps) {
     <div className="space-y-4">
       <div className="space-y-3">
         <Label className="text-base font-semibold">
-          Matching Pairs <span className="text-sm font-normal text-muted-foreground">(exactly 4 pairs required)</span>
+          أزواج المطابقة <span className="text-sm font-normal text-muted-foreground">(4 أزواج مطلوبة)</span>
         </Label>
-        
+
         {pairs.map((pair, index) => (
           <div key={index} className="space-y-2 p-3 border rounded-md bg-muted/30">
-            <Label className="text-sm font-medium">Pair {index + 1}</Label>
+            <Label className="text-sm font-medium">زوج {index + 1}</Label>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor={`pair-${index}-left`} className="text-xs text-muted-foreground">
-                  Left Item
+                  الطرف الأيسر
                 </Label>
                 <Input
                   id={`pair-${index}-left`}
                   value={pair.left}
                   onChange={(e) => handlePairChange(index, 'left', e.target.value)}
-                  placeholder="Enter left item"
+                  placeholder="أدخل الطرف الأيسر"
                   className="w-full"
                 />
               </div>
               <div className="space-y-1">
                 <Label htmlFor={`pair-${index}-right`} className="text-xs text-muted-foreground">
-                  Right Item
+                  الطرف الأيمن
                 </Label>
                 <Input
                   id={`pair-${index}-right`}
                   value={pair.right}
                   onChange={(e) => handlePairChange(index, 'right', e.target.value)}
-                  placeholder="Enter right item"
+                  placeholder="أدخل الطرف الأيمن"
                   className="w-full"
                 />
               </div>
@@ -121,7 +121,7 @@ export function MatchingForm({ value, onChange }: MatchingFormProps) {
       </div>
 
       <div className="text-sm text-muted-foreground">
-        <p>Students will match left items with right items. Both columns will be shuffled independently during the quiz.</p>
+        <p>سيقوم الطلاب بمطابقة العناصر اليسرى مع العناصر اليمنى. سيتم خلط كلا العمودين بشكل مستقل أثناء الاختبار.</p>
       </div>
     </div>
   );

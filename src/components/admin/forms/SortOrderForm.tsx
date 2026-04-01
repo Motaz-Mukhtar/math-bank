@@ -54,10 +54,10 @@ export function SortOrderForm({ value, onChange }: SortOrderFormProps) {
   useEffect(() => {
     // Validate that answer contains all items
     const validItems = items.filter(item => item.trim() !== '');
-    const isAnswerValid = 
+    const isAnswerValid =
       correctOrder.length === validItems.length &&
       correctOrder.every(item => validItems.includes(item));
-    
+
     onChange({
       items: validItems,
       instruction,
@@ -73,7 +73,7 @@ export function SortOrderForm({ value, onChange }: SortOrderFormProps) {
 
     // Update correct order if the item was in it
     if (oldValue && correctOrder.includes(oldValue)) {
-      const newCorrectOrder = correctOrder.map(item => 
+      const newCorrectOrder = correctOrder.map(item =>
         item === oldValue ? value : item
       );
       setCorrectOrder(newCorrectOrder);
@@ -133,13 +133,13 @@ export function SortOrderForm({ value, onChange }: SortOrderFormProps) {
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="instruction" className="text-base font-semibold">
-          Instruction Text
+          نص التعليمات
         </Label>
         <Input
           id="instruction"
           value={instruction}
           onChange={(e) => setInstruction(e.target.value)}
-          placeholder="Enter sorting instruction (e.g., 'Sort from smallest to largest')"
+          placeholder="أدخل نص التعليمات (مثال: 'رتب من الأصغر إلى الأكبر')"
           className="w-full"
         />
       </div>
@@ -147,7 +147,7 @@ export function SortOrderForm({ value, onChange }: SortOrderFormProps) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-base font-semibold">
-            Items <span className="text-sm font-normal text-muted-foreground">(3-5 items)</span>
+            العناصر <span className="text-sm font-normal text-muted-foreground">(3-5 عناصر)</span>
           </Label>
           <Button
             type="button"
@@ -157,21 +157,21 @@ export function SortOrderForm({ value, onChange }: SortOrderFormProps) {
             disabled={items.length >= 5}
           >
             <Plus className="h-4 w-4 mr-1" />
-            Add Item
+            اضافة عنصر
           </Button>
         </div>
-        
+
         {items.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
             <div className="flex-1 space-y-1">
               <Label htmlFor={`item-${index}`} className="text-sm">
-                Item {index + 1}
+                عنصر {index + 1}
               </Label>
               <Input
                 id={`item-${index}`}
                 value={item}
                 onChange={(e) => handleItemChange(index, e.target.value)}
-                placeholder={`Enter item ${index + 1}`}
+                placeholder={`أدخل عنصر ${index + 1}`}
                 className="w-full"
               />
             </div>
@@ -191,18 +191,18 @@ export function SortOrderForm({ value, onChange }: SortOrderFormProps) {
 
       <div className="space-y-3">
         <Label className="text-base font-semibold">
-          Correct Order
+          الترتيب الصحيح
         </Label>
-        
+
         {validItems.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Enter items above to define the correct order
+            أدخل العناصر أعلاه لتحديد الترتيب الصحيح
           </p>
         )}
 
         {validItems.length > 0 && correctOrder.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            Click items below to add them to the correct order
+            انقر على العناصر أدناه لإضافتها إلى الترتيب الصحيح
           </p>
         )}
 
@@ -248,7 +248,7 @@ export function SortOrderForm({ value, onChange }: SortOrderFormProps) {
         {itemsNotInOrder.length > 0 && (
           <div className="space-y-2">
             <Label className="text-sm text-muted-foreground">
-              Available items (click to add to order):
+              العناصر المتاحة (انقر للإضافة إلى الترتيب):
             </Label>
             <div className="flex flex-wrap gap-2">
               {itemsNotInOrder.map((item, index) => (

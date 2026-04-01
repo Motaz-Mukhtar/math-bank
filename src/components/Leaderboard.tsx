@@ -1,5 +1,7 @@
 import { Trophy, Medal } from "lucide-react";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { useEffect, useState } from "react";
+import { getLeaderboard } from "@/services/leaderboard.api";
 
 const students = [
   { name: "عبدالله محمد", points: 385, grade: "٣/أ" },
@@ -20,6 +22,18 @@ const rankStyles = [
 const Leaderboard = () => {
   const ref = useScrollReveal();
 
+  const [students, setStudents] = useState([]);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async () => {
+    const response = await getLeaderboard();
+
+    setStudents(response.topStudents);
+  };
+
   return (
     <section id="leaderboard" className="py-20">
       <div ref={ref} className="container max-w-2xl">
@@ -36,14 +50,14 @@ const Leaderboard = () => {
             const s = students[rank];
             const isFirst = rank === 0;
             return (
-              <div key={rank} className="flex flex-col items-center">
+              <div key={s?.id} className="flex flex-col items-center">
                 <div
                   className={`w-16 h-16 md:w-20 md:h-20 rounded-full ${rankStyles[rank]} flex items-center justify-center font-cairo font-extrabold text-xl md:text-2xl shadow-md ${isFirst ? "ring-4 ring-secondary/30 scale-110" : ""}`}
                 >
-                  {s.name.charAt(0)}
+                  {s?.fullName.charAt(0)}
                 </div>
-                <p className="font-cairo font-bold text-foreground mt-2 text-sm md:text-base">{s.name}</p>
-                <p className="font-cairo text-primary font-extrabold tabular-nums">{s.points}</p>
+                <p className="font-cairo font-bold text-foreground mt-2 text-sm md:text-base">{s?.fullName}</p>
+                <p className="font-cairo text-primary font-extrabold tabular-nums">{s?.profile?.points}</p>
                 <div
                   className={`mt-2 rounded-t-lg ${isFirst ? "gradient-warm h-24 w-20 md:w-24" : rank === 1 ? "gradient-hero h-16 w-16 md:w-20" : "gradient-accent h-12 w-16 md:w-20"}`}
                 />
@@ -54,22 +68,22 @@ const Leaderboard = () => {
 
         {/* Rest */}
         <div className="space-y-3 animate-reveal-up stagger-3">
-          {students.slice(3).map((s, i) => (
+          {students?.slice(3).map((s, i) => (
             <div
-              key={s.name}
+              key={s?.id}
               className="flex items-center gap-4 bg-card rounded-xl px-5 py-3 shadow-sm hover:shadow-md transition-shadow duration-200"
             >
               <span className="font-cairo font-bold text-muted-foreground w-8 text-center tabular-nums">
                 {i + 4}
               </span>
               <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center font-cairo font-bold text-foreground">
-                {s.name.charAt(0)}
+                {s?.fullName.charAt(0)}
               </div>
               <div className="flex-1">
-                <p className="font-cairo font-bold text-foreground text-sm">{s.name}</p>
-                <p className="text-muted-foreground text-xs">{s.grade}</p>
+                <p className="font-cairo font-bold text-foreground text-sm">{s?.fullName}</p>
+                <p className="text-muted-foreground text-xs">{s?.profile?.grade}</p>
               </div>
-              <span className="font-cairo font-extrabold text-primary tabular-nums">{s.points}</span>
+              <span className="font-cairo font-extrabold text-primary tabular-nums">{s?.profile?.points}</span>
             </div>
           ))}
         </div>

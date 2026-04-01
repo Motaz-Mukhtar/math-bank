@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, TrendingUp, Award } from "lucide-react";
+import { getChildProgress } from "@/services/parent.api";
 
-interface QuizResult {
-  id: string;
-  topic: string;
-  difficulty: string;
-  score: number;
-  total: number;
-  points_earned: number;
-  created_at: string;
+
+
+interface QuizHistory {
+  category: string;
+  completedAt: string;
+  correctCount: number;
+  incorrectCount: number;
+  level: string;
+  sessionId: string;
+  totalQuestions: number;
+  totalScore: number;
 }
 
 const topicLabels: Record<string, { label: string; emoji: string }> = {
@@ -34,28 +37,27 @@ interface Props {
 }
 
 const StudentQuizHistory = ({ studentProfileId, studentName }: Props) => {
-  const [results, setResults] = useState<QuizResult[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState<QuizHistory[]>([]);
+  const [loading, setLoading] = useState<Boolean>(true);
 
   useEffect(() => {
     const fetch = async () => {
-      const { data } = await supabase
-        .from("quiz_results")
-        .select("*")
-        .eq("student_profile_id", studentProfileId)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      setResults((data as QuizResult[]) || []);
+      setLoading(true);
+
+      const response = await getChildProgress(studentProfileId);
+      console.log(response.quizHistory);
+      // setResults((response as QuizResult[]) || []);
+      setResults(response.quizHistory);
       setLoading(false);
     };
     fetch();
   }, [studentProfileId]);
 
   const totalQuizzes = results.length;
-  const totalCorrect = results.reduce((s, r) => s + r.score, 0);
-  const totalQuestions = results.reduce((s, r) => s + r.total, 0);
+  const totalCorrect = results.reduce((s, r) => s + r.correctCount, 0);
+  const totalQuestions = results.reduce((s, r) => s + r.totalQuestions, 0);
   const avgScore = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
-  const totalPointsEarned = results.reduce((s, r) => s + r.points_earned, 0);
+  const totalPointsEarned = results.reduce((s, r) => s + r.totalScore, 0);
 
   if (loading) {
     return (
@@ -104,13 +106,13 @@ const StudentQuizHistory = ({ studentProfileId, studentName }: Props) => {
       {/* Recent results */}
       <div className="space-y-2">
         {results.slice(0, 5).map((r) => {
-          const topic = topicLabels[r.topic] || { label: r.topic, emoji: "📝" };
-          const diff = difficultyLabels[r.difficulty] || { label: r.difficulty, color: "text-muted-foreground", bg: "bg-muted" };
-          const pct = Math.round((r.score / r.total) * 100);
+          const topic = topicLabels[r.category] || { label: r.category, emoji: "📝" };
+          const diff = difficultyLabels[r.level] || { label: r.level, color: "text-muted-foreground", bg: "bg-muted" };
+          const pct = Math.round((r.totalScore / r.totalQuestions) * 100);
 
           return (
             <div
-              key={r.id}
+              key={r.sessionId}
               className="flex items-center gap-3 bg-card rounded-xl border border-border p-3"
             >
               <span className="text-xl shrink-0">{topic.emoji}</span>
@@ -122,14 +124,14 @@ const StudentQuizHistory = ({ studentProfileId, studentName }: Props) => {
                   </span>
                 </div>
                 <p className="text-[10px] text-muted-foreground font-cairo">
-                  {new Date(r.created_at).toLocaleDateString("ar-SA")}
+                  {new Date(r.completedAt).toLocaleDateString("ar-SA")}
                 </p>
               </div>
               <div className="text-left shrink-0">
                 <p className={`font-bold text-sm tabular-nums ${pct >= 80 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-red-600"}`}>
-                  {r.score}/{r.total}
+                  {r.correctCount}/{r.totalQuestions}
                 </p>
-                <p className="text-[10px] text-muted-foreground tabular-nums">+{r.points_earned} ⭐</p>
+                <p className="text-[10px] text-muted-foreground tabular-nums">+{r.totalScore} ⭐</p>
               </div>
             </div>
           );

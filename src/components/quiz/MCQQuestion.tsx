@@ -9,6 +9,8 @@ interface MCQQuestionProps {
 
 export const MCQQuestion: React.FC<MCQQuestionProps> = ({ question, onSubmit }) => {
   const handleOptionClick = (option: string) => {
+    console.log(question, option);
+    console.log("hell")
     onSubmit(option);
   };
 

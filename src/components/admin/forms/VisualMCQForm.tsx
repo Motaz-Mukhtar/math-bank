@@ -104,37 +104,37 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="svg-type" className="text-base font-semibold">
-          SVG Type
+          نوع الرسم
         </Label>
         <Select
           value={svgType}
           onValueChange={(value) => setSvgType(value as SVGType)}
         >
           <SelectTrigger id="svg-type" className="w-full">
-            <SelectValue placeholder="Select SVG type" />
+            <SelectValue placeholder="اختر نوع الرسم" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={SVGType.FRACTION_CIRCLE}>Fraction Circle</SelectItem>
-            <SelectItem value={SVGType.FRACTION_RECT}>Fraction Rectangle</SelectItem>
-            <SelectItem value={SVGType.FRACTION_GROUP}>Fraction Group</SelectItem>
-            <SelectItem value={SVGType.SHAPE_2D}>Shape 2D</SelectItem>
-            <SelectItem value={SVGType.SHAPE_3D}>Shape 3D</SelectItem>
-            <SelectItem value={SVGType.DOT_ARRAY}>Dot Array</SelectItem>
-            <SelectItem value={SVGType.SYMMETRY}>Symmetry</SelectItem>
-            <SelectItem value={SVGType.GRID_AREA}>Grid Area</SelectItem>
-            <SelectItem value={SVGType.BAR_CHART}>Bar Chart</SelectItem>
-            <SelectItem value={SVGType.CLOCK_FACE}>Clock Face</SelectItem>
+            <SelectItem value={SVGType.FRACTION_CIRCLE}>كسر دائرة</SelectItem>
+            <SelectItem value={SVGType.FRACTION_RECT}>كسر مستطيل</SelectItem>
+            <SelectItem value={SVGType.FRACTION_GROUP}>مجموعة كسور</SelectItem>
+            <SelectItem value={SVGType.SHAPE_2D}>شكل ثنائي الأبعاد</SelectItem>
+            <SelectItem value={SVGType.SHAPE_3D}>شكل ثلاثي الأبعاد</SelectItem>
+            <SelectItem value={SVGType.DOT_ARRAY}>مصفوفة نقاط</SelectItem>
+            <SelectItem value={SVGType.SYMMETRY}>تناظر</SelectItem>
+            <SelectItem value={SVGType.GRID_AREA}>مساحة الشبكة</SelectItem>
+            <SelectItem value={SVGType.BAR_CHART}>مخطط شريطي</SelectItem>
+            <SelectItem value={SVGType.CLOCK_FACE}>وجه ساعة</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-4">
-        <Label className="text-base font-semibold">Choices</Label>
+        <Label className="text-base font-semibold">الخيارات</Label>
         {choices.map((choice, index) => (
           <div key={index} className="border rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-semibold">
-                Choice {index} ({choice.label})
+                الخيار {index} ({choice.label})
               </Label>
               <div className="border rounded p-2 bg-gray-50">
                 <SVGRenderer
@@ -147,20 +147,20 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor={`label-${index}`} className="text-sm">
-                Label
+                التسمية
               </Label>
               <Input
                 id={`label-${index}`}
                 value={choice.label}
                 onChange={(e) => handleLabelChange(index, e.target.value)}
-                placeholder="Enter label"
+                placeholder="أدخل التسمية"
                 className="w-full"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor={`params-${index}`} className="text-sm">
-                Parameters (JSON)
+                المعلمات (JSON)
               </Label>
               <Input
                 id={`params-${index}`}
@@ -176,20 +176,20 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="correct-answer" className="text-base font-semibold">
-          Correct Answer
+          الإجابة الصحيحة
         </Label>
         <Select
           value={answer}
           onValueChange={(value) => setAnswer(value as '0' | '1' | '2' | '3')}
         >
           <SelectTrigger id="correct-answer" className="w-full">
-            <SelectValue placeholder="Select correct answer" />
+            <SelectValue placeholder="اختر الإجابة الصحيحة" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="0">Choice 0 ({choices[0].label})</SelectItem>
-            <SelectItem value="1">Choice 1 ({choices[1].label})</SelectItem>
-            <SelectItem value="2">Choice 2 ({choices[2].label})</SelectItem>
-            <SelectItem value="3">Choice 3 ({choices[3].label})</SelectItem>
+            <SelectItem value="0">الخيار 0 ({choices[0].label})</SelectItem>
+            <SelectItem value="1">الخيار 1 ({choices[1].label})</SelectItem>
+            <SelectItem value="2">الخيار 2 ({choices[2].label})</SelectItem>
+            <SelectItem value="3">الخيار 3 ({choices[3].label})</SelectItem>
           </SelectContent>
         </Select>
       </div>

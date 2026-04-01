@@ -13,6 +13,8 @@ export const VisualMCQQuestion: React.FC<VisualMCQQuestionProps> = ({ question, 
     onSubmit(index.toString());
   };
 
+  console.log(question);
+
   return (
     <div className="flex flex-col gap-6 w-full max-w-2xl mx-auto">
       {/* Question Text */}

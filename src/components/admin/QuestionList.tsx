@@ -84,7 +84,7 @@ const LEVEL_LABELS: Record<QuizLevel, string> = {
 export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  
+
   // Filter states
   const [filterType, setFilterType] = useState<QuestionType | 'all'>('all');
   const [filterCategory, setFilterCategory] = useState<QuizCategory | 'all'>('all');
@@ -98,7 +98,7 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
     setIsLoading(true);
     try {
       const params: Record<string, string> = {};
-      
+
       if (filterType !== 'all') {
         params.questionType = filterType;
       }
@@ -110,7 +110,7 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
       }
 
       const response = await apiClient.get('/admin/questions', { params });
-      setQuestions(response.data.data || []);
+      setQuestions(response.data.data.questions || []);
     } catch (error) {
       console.error('Failed to fetch questions:', error);
       toast.error('فشل تحميل الأسئلة');
@@ -221,7 +221,7 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
           <div className="flex items-center justify-center p-8">
             <p>جاري التحميل...</p>
           </div>
-        ) : questions.length === 0 ? (
+        ) : questions?.length === 0 ? (
           <div className="flex items-center justify-center p-8 text-muted-foreground">
             <p>لا توجد أسئلة</p>
           </div>
@@ -239,7 +239,7 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {questions.map((question) => (
+                {!isLoading && questions?.map((question) => (
                   <TableRow key={question.id}>
                     <TableCell className="font-medium">
                       {truncateText(question.text)}

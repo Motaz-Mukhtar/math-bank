@@ -72,7 +72,7 @@ export const MatchingQuestion: React.FC<MatchingQuestionProps> = ({ question, on
       <div className="grid grid-cols-2 gap-8">
         {/* Left Column */}
         <div className="flex flex-col gap-3">
-          <div className="text-sm font-medium text-gray-700 text-center">العمود الأيسر</div>
+          <div className="text-sm font-medium text-gray-700 text-center">العمود الأيمن</div>
           {leftItems.map((item, index) => (
             <Button
               key={index}
@@ -90,7 +90,7 @@ export const MatchingQuestion: React.FC<MatchingQuestionProps> = ({ question, on
 
         {/* Right Column */}
         <div className="flex flex-col gap-3">
-          <div className="text-sm font-medium text-gray-700 text-center">العمود الأيمن</div>
+          <div className="text-sm font-medium text-gray-700 text-center">العمود الأيسر</div>
           {rightItems.map((item, index) => (
             <Button
               key={index}

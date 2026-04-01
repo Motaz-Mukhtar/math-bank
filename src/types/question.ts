@@ -49,6 +49,7 @@ export interface BaseQuestion {
   id: string;
   text: string;
   category: QuizCategory;
+  options: Array<string>,
   level: QuizLevel;
   points: number;
   createdAt: Date;

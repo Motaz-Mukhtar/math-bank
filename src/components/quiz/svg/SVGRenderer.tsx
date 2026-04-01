@@ -7,7 +7,7 @@ interface SVGRendererProps {
   size?: number;
 }
 
-export const SVGRenderer: React.FC<SVGRendererProps> = ({ svgType, params, size = 200 }) => {
+export const SVGRenderer: React.FC<SVGRendererProps> = ({ svgType, params, size = 500 }) => {
   switch (svgType) {
     case SVGType.FRACTION_CIRCLE:
       return <FractionCircle params={params} size={size} />;

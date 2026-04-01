@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Users, Star, TrendingUp, UserPlus, Trash2, Search, BarChart3, Hash, BookOpen } from "lucide-react";
+import { Users, Star, TrendingUp, UserPlus, Search, BarChart3, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 const ParentDashboard = () => {
@@ -24,9 +24,7 @@ const ParentDashboard = () => {
   const [loadingStudents, setLoadingStudents] = useState(true);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate("/login");
-    }
+    if (!loading && !isAuthenticated) navigate("/login");
   }, [isAuthenticated, loading, navigate]);
 
   useEffect(() => {
@@ -49,7 +47,7 @@ const ParentDashboard = () => {
   const handleAddStudent = async () => {
     const trimmed = searchEmail.trim();
     if (!trimmed) return;
-    
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       toast.error("البريد الإلكتروني غير صحيح");
       return;
