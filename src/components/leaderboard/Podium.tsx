@@ -2,55 +2,70 @@ import { LeaderboardEntry } from '@/types';
 
 interface PodiumProps {
   topThree: LeaderboardEntry[];
+  currentUserId?: string;
 }
 
-const rankStyles = [
-  { bg: 'gradient-warm', ring: 'ring-4 ring-secondary/30', height: 'h-24', width: 'w-20 md:w-24' },
-  { bg: 'gradient-hero', ring: '', height: 'h-16', width: 'w-16 md:w-20' },
-  { bg: 'gradient-accent', ring: '', height: 'h-12', width: 'w-16 md:w-20' },
+const PLACE_CONFIG = [
+  // 2nd — left
+  {
+    avatarSize: 'w-14 h-14',
+    barHeight: 'h-14',
+    bgClass: 'gradient-hero',
+    label: '🥈',
+  },
+  // 1st — center (elevated)
+  {
+    avatarSize: 'w-[72px] h-[72px]',
+    barHeight: 'h-20',
+    bgClass: 'gradient-warm',
+    label: '🥇',
+  },
+  // 3rd — right
+  {
+    avatarSize: 'w-14 h-14',
+    barHeight: 'h-10',
+    bgClass: 'gradient-accent',
+    label: '🥉',
+  },
 ];
 
-export const Podium = ({ topThree }: PodiumProps) => {
+// Display order: 2nd, 1st, 3rd
+const DISPLAY_ORDER = [1, 0, 2];
+
+export const Podium = ({ topThree, currentUserId }: PodiumProps) => {
   if (topThree.length === 0) {
     return (
-      <div className="text-center py-10 text-muted-foreground">
+      <div className="text-center py-10 text-muted-foreground font-cairo">
         لا يوجد طلاب في لوحة المتصدرين بعد
       </div>
     );
   }
 
-  // Arrange as: 2nd, 1st, 3rd
-  const podiumOrder = [
-    topThree[1], // 2nd place (left)
-    topThree[0], // 1st place (center)
-    topThree[2], // 3rd place (right)
-  ].filter(Boolean);
-
   return (
-    <div className="flex justify-center items-end gap-4 mb-10 animate-reveal-up stagger-2">
-      {podiumOrder.map((student, displayIndex) => {
+    <div className="flex justify-center items-end gap-3 mb-10 animate-reveal-up stagger-2">
+      {DISPLAY_ORDER.map((rankIdx) => {
+        const student = topThree[rankIdx];
         if (!student) return null;
-        
-        const actualRank = student.rank - 1; // 0-indexed for styles
-        const isFirst = student.rank === 1;
-        const style = rankStyles[actualRank];
+        const cfg = PLACE_CONFIG[rankIdx];
+        const isMe = currentUserId && student.userId === currentUserId;
 
         return (
-          <div key={student.userId} className="flex flex-col items-center">
+          <div key={student.userId} className="flex flex-col items-center gap-1">
+            <span className="text-lg">{cfg.label}</span>
             <div
-              className={`w-16 h-16 md:w-20 md:h-20 rounded-full ${style.bg} text-white flex items-center justify-center font-cairo font-extrabold text-xl md:text-2xl shadow-md ${isFirst ? style.ring + ' scale-110' : ''}`}
+              className={`${cfg.avatarSize} rounded-full ${cfg.bgClass} text-white flex items-center justify-center font-cairo font-extrabold text-xl shadow-md transition-transform duration-200
+                ${rankIdx === 0 ? 'scale-110' : ''}
+                ${isMe ? 'ring-4 ring-primary/60' : ''}`}
             >
               {student.fullName.charAt(0)}
             </div>
-            <p className="font-cairo font-bold text-foreground mt-2 text-sm md:text-base text-center">
+            <p className="font-cairo font-bold text-foreground text-sm text-center max-w-[80px] truncate">
               {student.fullName}
             </p>
-            <p className="font-cairo text-primary font-extrabold tabular-nums">
-              {student.points}
+            <p className="font-cairo font-extrabold text-primary tabular-nums text-sm">
+              ⭐ {student.points}
             </p>
-            <div
-              className={`mt-2 rounded-t-lg ${style.bg} ${style.height} ${style.width}`}
-            />
+            <div className={`w-16 rounded-t-lg ${cfg.bgClass} ${cfg.barHeight} opacity-80`} />
           </div>
         );
       })}

@@ -53,6 +53,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
+      // Always redirect to login after sign-out
+      window.location.href = '/login';
     }
   };
 

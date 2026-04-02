@@ -65,7 +65,7 @@ export const MatchingQuestion: React.FC<MatchingQuestionProps> = ({ question, on
 
       {/* Instruction */}
       <div className="text-base text-center text-gray-600">
-        اضغط على عنصر من العمود الأيسر ثم على العنصر المطابق من العمود الأيمن
+        اضغط على عنصر من العمود الأيمن ثم على العنصر المطابق من العمود الأيسر
       </div>
 
       {/* Matching Grid */}

@@ -17,12 +17,20 @@ export interface User {
 }
 
 // Leaderboard types
+export interface Badge {
+  key: string;
+  labelAr: string;
+  icon: string;
+  color: 'teal' | 'amber' | 'coral' | 'purple' | 'green';
+}
+
 export interface LeaderboardEntry {
   rank: number;
   userId: string;
   fullName: string;
   academicNumber: string | null;
   points: number;
+  badges?: Badge[];
 }
 
 export interface CurrentUserRank {
@@ -33,6 +41,36 @@ export interface CurrentUserRank {
 export interface LeaderboardResponse {
   topStudents: LeaderboardEntry[];
   currentUser: CurrentUserRank | null;
+}
+
+export interface FullLeaderboardResponse {
+  entries: LeaderboardEntry[];
+  meta: { page: number; limit: number; total: number; totalPages: number };
+  period: 'all' | 'weekly';
+  currentUser: {
+    rank: number;
+    total: number;
+    weeklyRank: number | null;
+    weeklyTotal: number;
+  } | null;
+}
+
+export interface CategoryBreakdownItem {
+  category: string;
+  labelAr: string;
+  points: number;
+}
+
+export interface MyLeaderboardStats {
+  rank: number;
+  total: number;
+  weeklyRank: number | null;
+  weeklyTotal: number;
+  nextRankGap: number;
+  nextRankName: string | null;
+  pointsHistory: Array<{ date: string; total: number }>;
+  categoryBreakdown: CategoryBreakdownItem[];
+  badges: Badge[];
 }
 
 // API Response types

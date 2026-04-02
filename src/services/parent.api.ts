@@ -44,13 +44,13 @@ export interface ChildProgress {
 }
 
 /**
- * Link a child to parent account by email
+ * Link a child to parent account by academic number
  * POST /api/v1/parent/link
  */
-export const linkChild = async (childEmail: string): Promise<LinkChildResponse> => {
+export const linkChild = async (academicNumber: string): Promise<LinkChildResponse> => {
   const response = await apiClient.post<ApiResponse<LinkChildResponse>>(
     '/parent/link',
-    { childEmail }
+    { academicNumber }
   );
   return response.data.data;
 };

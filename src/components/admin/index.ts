@@ -1,3 +1,8 @@
 export { QuestionTypeSelector } from './QuestionTypeSelector';
 export { QuestionFormContainer } from './QuestionFormContainer';
 export { QuestionList } from './QuestionList';
+export { default as AdminStatsSection } from './AdminStatsSection';
+export { default as AdminExportSection } from './AdminExportSection';
+export { default as AdminUsersTable } from './AdminUsersTable';
+export { default as AdminEditUserDialog } from './AdminEditUserDialog';
+export { default as AdminDeleteUserDialog } from './AdminDeleteUserDialog';

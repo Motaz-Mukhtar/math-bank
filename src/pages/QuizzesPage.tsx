@@ -115,6 +115,7 @@ const QuizzesPage = () => {
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [noQuestionsAvailable, setNoQuestionsAvailable] = useState(false);
 
   const pointsPerCorrect = selectedDifficulty ? difficultyMap[selectedDifficulty].pointsPerCorrect : 0;
 
@@ -122,13 +123,12 @@ const QuizzesPage = () => {
   const startQuiz = async (category: string, difficulty: Difficulty) => {
     try {
       setLoading(true);
-      const newSession = await startSession(category, difficulty);
+      setNoQuestionsAvailable(false);
+      const newSession = await startSession(category as import("@/services/quiz.api").QuizCategory, difficulty);
       setSession(newSession);
       setCurrentIndex(0);
       setCorrectCount(0);
       setFinished(false);
-
-      // The first question is included in the session response
       setCurrentQuestion({
         currentQuestion: newSession.currentQuestion,
         totalQuestions: newSession.totalQuestions,
@@ -138,7 +138,13 @@ const QuizzesPage = () => {
       setIsCorrect(null);
     } catch (error: any) {
       console.error("Failed to start quiz:", error);
-      toast.error(error.response?.data?.error || "فشل بدء الاختبار");
+      const msg: string = error.response?.data?.error || "";
+      // Detect "insufficient questions" error from backend
+      if (msg.includes("أقل من المطلوب") || msg.includes("عدد الأسئلة المتاحة")) {
+        setNoQuestionsAvailable(true);
+      } else {
+        toast.error(msg || "فشل بدء الاختبار");
+      }
     } finally {
       setLoading(false);
     }
@@ -147,6 +153,7 @@ const QuizzesPage = () => {
   // Handle difficulty selection
   const handleDifficultySelect = (difficulty: Difficulty) => {
     setSelectedDifficulty(difficulty);
+    setNoQuestionsAvailable(false);
     if (selectedCategory) {
       startQuiz(selectedCategory.id, difficulty);
     }
@@ -227,9 +234,11 @@ const QuizzesPage = () => {
     setIsCorrect(null);
     setCorrectCount(0);
     setFinished(false);
+    setNoQuestionsAvailable(false);
   };
 
   const retryCategory = () => {
+    setNoQuestionsAvailable(false);
     if (selectedCategory && selectedDifficulty) {
       startQuiz(selectedCategory.id, selectedDifficulty);
     }
@@ -241,7 +250,7 @@ const QuizzesPage = () => {
       <main className="pt-24 pb-16 min-h-screen bg-background">
         <div className="container max-w-2xl">
           {/* Header */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
             <h1 className="font-cairo font-extrabold text-3xl md:text-4xl text-foreground mb-2">
               الاختبارات التفاعلية
             </h1>
@@ -253,11 +262,12 @@ const QuizzesPage = () => {
           {/* Category selection */}
           {!selectedCategory && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {categories.map((cat) => (
+              {categories.map((cat, idx) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat)}
-                  className="group bg-card rounded-2xl p-6 shadow-sm border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 active:scale-[0.97] text-center space-y-2"
+                  className="group bg-card rounded-2xl p-6 shadow-sm border border-border hover:shadow-md hover:border-primary/30 hover:-translate-y-1 transition-all duration-200 active:scale-[0.97] text-center space-y-2 animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${idx * 60}ms` }}
                 >
                   <span className="text-4xl block group-hover:scale-110 transition-transform duration-200">{cat.emoji}</span>
                   <span className="font-cairo font-bold text-foreground block">{cat.label}</span>
@@ -269,7 +279,7 @@ const QuizzesPage = () => {
 
           {/* Difficulty selection */}
           {selectedCategory && !selectedDifficulty && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
               <div className="flex items-center justify-between">
                 <button
                   onClick={reset}
@@ -318,8 +328,54 @@ const QuizzesPage = () => {
             </div>
           )}
 
+          {/* No questions available */}
+          {selectedCategory && selectedDifficulty && noQuestionsAvailable && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={backToCategories}
+                  className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-cairo font-semibold text-sm transition-colors active:scale-95"
+                >
+                  <ChevronLeft className="w-4 h-4 rotate-180" />
+                  المستويات
+                </button>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{selectedCategory.emoji}</span>
+                  <span className="font-cairo font-bold text-foreground">{selectedCategory.label}</span>
+                </div>
+              </div>
+              <div className="bg-card rounded-2xl p-10 shadow-sm border border-border text-center space-y-4">
+                <span className="text-6xl block">📭</span>
+                <h2 className="font-cairo font-extrabold text-xl text-foreground">
+                  لا توجد أسئلة كافية
+                </h2>
+                <p className="font-cairo text-muted-foreground text-sm leading-relaxed">
+                  لا يوجد عدد كافٍ من الأسئلة لهذا الموضوع والمستوى حالياً.
+                  <br />
+                  جرّب مستوى آخر أو موضوعاً مختلفاً.
+                </p>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={backToCategories}
+                    className="flex items-center gap-2 border-2 border-primary text-primary font-cairo font-bold px-5 py-2.5 rounded-xl hover:bg-primary/5 transition-colors active:scale-[0.97]"
+                  >
+                    <ChevronLeft className="w-4 h-4 rotate-180" />
+                    تغيير المستوى
+                  </button>
+                  <button
+                    onClick={reset}
+                    className="flex items-center gap-2 gradient-hero text-primary-foreground font-cairo font-bold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-shadow active:scale-[0.97]"
+                  >
+                    <Brain className="w-4 h-4" />
+                    موضوع آخر
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Quiz in progress */}
-          {selectedCategory && selectedDifficulty && !finished && session && currentQuestion && (
+          {selectedCategory && selectedDifficulty && !finished && !noQuestionsAvailable && session && currentQuestion && (
             <div className="space-y-6">
               {/* Top bar */}
               <div className="flex items-center justify-between">

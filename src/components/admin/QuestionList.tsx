@@ -2,53 +2,19 @@ import { useState, useEffect } from 'react';
 import { Question, QuestionType, QuizCategory, QuizLevel } from '@/types/question';
 import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api';
 import { toast } from 'sonner';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
-/**
- * QuestionList component for admin panel
- * 
- * Displays a list of all questions with filtering capabilities.
- * Features:
- * - Fetches questions from backend API (GET /api/admin/questions)
- * - Displays questions in a table showing: text, type, category, level, points
- * - Provides filter dropdowns for questionType, category, and level
- * - Provides edit and delete buttons for each question
- * - Handles loading and error states
- * 
- * @example
- * ```tsx
- * <QuestionList 
- *   onEdit={(id) => navigate(`/admin/questions/edit/${id}`)}
- * />
- * ```
- * 
- * **Validates: Requirements 10.4, 10.5**
- */
+const PAGE_SIZE = 10;
 
-interface QuestionListProps {
-  onEdit?: (questionId: string) => void;
-  onDelete?: (questionId: string) => void;
-}
-
-// Arabic labels for question types
 const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   [QuestionType.MCQ]: 'اختيار من متعدد',
   [QuestionType.FILL_BLANK]: 'املأ الفراغ',
@@ -58,7 +24,6 @@ const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
   [QuestionType.CLOCK_READ]: 'قراءة الساعة',
 };
 
-// Arabic labels for categories
 const CATEGORY_LABELS: Record<QuizCategory, string> = {
   [QuizCategory.ADDITION]: 'جمع',
   [QuizCategory.SUBTRACTION]: 'طرح',
@@ -74,43 +39,52 @@ const CATEGORY_LABELS: Record<QuizCategory, string> = {
   [QuizCategory.DATA]: 'بيانات',
 };
 
-// Arabic labels for levels
 const LEVEL_LABELS: Record<QuizLevel, string> = {
   [QuizLevel.EASY]: 'سهل',
   [QuizLevel.MEDIUM]: 'متوسط',
   [QuizLevel.HARD]: 'صعب',
 };
 
+interface QuestionListProps {
+  onEdit?: (questionId: string) => void;
+  onDelete?: (questionId: string) => void;
+}
+
 export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  // Filter states
   const [filterType, setFilterType] = useState<QuestionType | 'all'>('all');
   const [filterCategory, setFilterCategory] = useState<QuizCategory | 'all'>('all');
   const [filterLevel, setFilterLevel] = useState<QuizLevel | 'all'>('all');
 
   useEffect(() => {
-    fetchQuestions();
+    setPage(1);
+    fetchQuestions(1);
   }, [filterType, filterCategory, filterLevel]);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = async (p = page) => {
     setIsLoading(true);
     try {
-      const params: Record<string, string> = {};
-
-      if (filterType !== 'all') {
-        params.questionType = filterType;
-      }
-      if (filterCategory !== 'all') {
-        params.category = filterCategory;
-      }
-      if (filterLevel !== 'all') {
-        params.level = filterLevel;
-      }
+      const params: Record<string, string | number> = { page: p, limit: PAGE_SIZE };
+      if (filterType !== 'all') params.questionType = filterType;
+      if (filterCategory !== 'all') params.category = filterCategory;
+      if (filterLevel !== 'all') params.level = filterLevel;
 
       const response = await apiClient.get('/admin/questions', { params });
-      setQuestions(response.data.data.questions || []);
+      const data = response.data.data;
+      if (Array.isArray(data)) {
+        setQuestions(data);
+        setTotal(data.length);
+        setTotalPages(1);
+      } else {
+        setQuestions(data.questions || []);
+        setTotal(data.total ?? data.questions?.length ?? 0);
+        setTotalPages(data.totalPages ?? 1);
+      }
     } catch (error) {
       console.error('Failed to fetch questions:', error);
       toast.error('فشل تحميل الأسئلة');
@@ -119,15 +93,17 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
     }
   };
 
-  const handleDelete = async (questionId: string) => {
-    if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) {
-      return;
-    }
+  const handlePageChange = (p: number) => {
+    setPage(p);
+    fetchQuestions(p);
+  };
 
+  const handleDelete = async (questionId: string) => {
+    if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) return;
     try {
       await apiClient.delete(`/admin/questions/${questionId}`);
       toast.success('تم حذف السؤال بنجاح');
-      fetchQuestions();
+      fetchQuestions(page);
       onDelete?.(questionId);
     } catch (error) {
       console.error('Failed to delete question:', error);
@@ -135,148 +111,188 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
     }
   };
 
-  const handleEdit = (questionId: string) => {
-    onEdit?.(questionId);
-  };
-
-  const truncateText = (text: string, maxLength: number = 50) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
+  const truncateText = (text: string, max = 50) =>
+    text.length <= max ? text : text.substring(0, max) + '...';
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>قائمة الأسئلة</CardTitle>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle className="font-cairo">
+            قائمة الأسئلة
+            {!isLoading && (
+              <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full mr-2">
+                {total}
+              </span>
+            )}
+          </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Question Type Filter */}
-          <div className="space-y-2">
-            <Label htmlFor="filter-type">نوع السؤال</Label>
-            <Select
-              value={filterType}
-              onValueChange={(value) => setFilterType(value as QuestionType | 'all')}
-            >
-              <SelectTrigger id="filter-type">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="filter-type" className="font-cairo text-sm">نوع السؤال</Label>
+            <Select value={filterType} onValueChange={(v) => setFilterType(v as QuestionType | 'all')}>
+              <SelectTrigger id="filter-type" className="font-cairo">
                 <SelectValue placeholder="جميع الأنواع" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="font-cairo">
                 <SelectItem value="all">جميع الأنواع</SelectItem>
                 {Object.entries(QUESTION_TYPE_LABELS).map(([type, label]) => (
-                  <SelectItem key={type} value={type}>
-                    {label}
-                  </SelectItem>
+                  <SelectItem key={type} value={type}>{label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Category Filter */}
-          <div className="space-y-2">
-            <Label htmlFor="filter-category">الفئة</Label>
-            <Select
-              value={filterCategory}
-              onValueChange={(value) => setFilterCategory(value as QuizCategory | 'all')}
-            >
-              <SelectTrigger id="filter-category">
+          <div className="space-y-1.5">
+            <Label htmlFor="filter-category" className="font-cairo text-sm">الفئة</Label>
+            <Select value={filterCategory} onValueChange={(v) => setFilterCategory(v as QuizCategory | 'all')}>
+              <SelectTrigger id="filter-category" className="font-cairo">
                 <SelectValue placeholder="جميع الفئات" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="font-cairo">
                 <SelectItem value="all">جميع الفئات</SelectItem>
-                {Object.entries(CATEGORY_LABELS).map(([category, label]) => (
-                  <SelectItem key={category} value={category}>
-                    {label}
-                  </SelectItem>
+                {Object.entries(CATEGORY_LABELS).map(([cat, label]) => (
+                  <SelectItem key={cat} value={cat}>{label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Level Filter */}
-          <div className="space-y-2">
-            <Label htmlFor="filter-level">المستوى</Label>
-            <Select
-              value={filterLevel}
-              onValueChange={(value) => setFilterLevel(value as QuizLevel | 'all')}
-            >
-              <SelectTrigger id="filter-level">
+          <div className="space-y-1.5">
+            <Label htmlFor="filter-level" className="font-cairo text-sm">المستوى</Label>
+            <Select value={filterLevel} onValueChange={(v) => setFilterLevel(v as QuizLevel | 'all')}>
+              <SelectTrigger id="filter-level" className="font-cairo">
                 <SelectValue placeholder="جميع المستويات" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="font-cairo">
                 <SelectItem value="all">جميع المستويات</SelectItem>
-                {Object.entries(LEVEL_LABELS).map(([level, label]) => (
-                  <SelectItem key={level} value={level}>
-                    {label}
-                  </SelectItem>
+                {Object.entries(LEVEL_LABELS).map(([lvl, label]) => (
+                  <SelectItem key={lvl} value={lvl}>{label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {/* Questions Table */}
+        {/* Table */}
         {isLoading ? (
-          <div className="flex items-center justify-center p-8">
-            <p>جاري التحميل...</p>
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
-        ) : questions?.length === 0 ? (
-          <div className="flex items-center justify-center p-8 text-muted-foreground">
-            <p>لا توجد أسئلة</p>
+        ) : questions.length === 0 ? (
+          <div className="flex items-center justify-center py-10 text-muted-foreground font-cairo">
+            لا توجد أسئلة
           </div>
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>نص السؤال</TableHead>
-                  <TableHead>النوع</TableHead>
-                  <TableHead>الفئة</TableHead>
-                  <TableHead>المستوى</TableHead>
-                  <TableHead>النقاط</TableHead>
-                  <TableHead className="text-left">الإجراءات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {!isLoading && questions?.map((question) => (
-                  <TableRow key={question.id}>
-                    <TableCell className="font-medium">
-                      {truncateText(question.text)}
-                    </TableCell>
-                    <TableCell>
-                      {QUESTION_TYPE_LABELS[question.questionType]}
-                    </TableCell>
-                    <TableCell>
-                      {CATEGORY_LABELS[question.category]}
-                    </TableCell>
-                    <TableCell>
-                      {LEVEL_LABELS[question.level]}
-                    </TableCell>
-                    <TableCell>{question.points}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(question.id)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(question.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          <>
+            <div className="rounded-lg border border-border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="font-cairo text-right">نص السؤال</TableHead>
+                    <TableHead className="font-cairo text-right">النوع</TableHead>
+                    <TableHead className="font-cairo text-right">الفئة</TableHead>
+                    <TableHead className="font-cairo text-right">المستوى</TableHead>
+                    <TableHead className="font-cairo text-right">النقاط</TableHead>
+                    <TableHead className="font-cairo text-right w-24">إجراءات</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {questions.map((q, idx) => (
+                    <TableRow
+                      key={q.id}
+                      className="hover:bg-muted/30 transition-colors animate-in fade-in"
+                      style={{ animationDelay: `${idx * 25}ms` }}
+                    >
+                      <TableCell className="font-cairo font-medium max-w-[200px]">
+                        {truncateText(q.text)}
+                      </TableCell>
+                      <TableCell className="font-cairo text-sm">
+                        {QUESTION_TYPE_LABELS[q.questionType]}
+                      </TableCell>
+                      <TableCell className="font-cairo text-sm">
+                        {CATEGORY_LABELS[q.category]}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`text-xs font-cairo font-bold px-2 py-0.5 rounded-full ${
+                          q.level === QuizLevel.EASY ? 'bg-emerald-100 text-emerald-700' :
+                          q.level === QuizLevel.MEDIUM ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {LEVEL_LABELS[q.level]}
+                        </span>
+                      </TableCell>
+                      <TableCell className="font-cairo tabular-nums font-bold text-primary">
+                        {q.points}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => onEdit?.(q.id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors active:scale-95"
+                            title="تعديل"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(q.id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors active:scale-95"
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-sm text-muted-foreground font-cairo">
+                  صفحة {page} من {totalPages} — {total} سؤال
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={() => handlePageChange(page - 1)}
+                    disabled={page === 1}
+                    className="gap-1 font-cairo"
+                  >
+                    <ChevronRight className="w-4 h-4" />السابق
+                  </Button>
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const p = Math.max(1, Math.min(page - 2, totalPages - 4)) + i;
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => handlePageChange(p)}
+                          className={`w-8 h-8 rounded-lg text-sm font-cairo font-bold transition-colors ${
+                            p === page ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={() => handlePageChange(page + 1)}
+                    disabled={page === totalPages}
+                    className="gap-1 font-cairo"
+                  >
+                    التالي<ChevronLeft className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

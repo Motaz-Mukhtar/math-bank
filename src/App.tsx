@@ -16,6 +16,8 @@ import ParentDashboard from "./pages/ParentDashboard.tsx";
 import ProfilePage from "./pages/ProfilePage.tsx";
 import QuizzesPage from "./pages/QuizzesPage.tsx";
 import AdminDashboard from "./pages/AdminDashboard.tsx";
+import LeaderboardPage from "./pages/LeaderboardPage.tsx";
+import WheelPage from "./pages/WheelPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -39,6 +41,8 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/quizzes" element={<ProtectedRoute><QuizzesPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
+            <Route path="/wheel" element={<ProtectedRoute><WheelPage /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
