@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, XCircle, ArrowLeft, Trophy, Zap, RotateCcw, ChevronLeft, Flame, Brain, Sparkles } from "lucide-react";
+import { 
+  CheckCircle, XCircle, ArrowLeft, Trophy, Zap, RotateCcw, ChevronLeft, Flame, Brain, Sparkles,
+  Plus, Minus, X, Divide, Scale, Ruler, MailOpen, Award, Dumbbell
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,7 +17,6 @@ type Difficulty = "EASY" | "MEDIUM" | "HARD";
 
 interface DifficultyConfig {
   label: string;
-  emoji: string;
   icon: typeof Sparkles;
   color: string;
   bgColor: string;
@@ -26,7 +28,6 @@ interface DifficultyConfig {
 const difficultyMap: Record<Difficulty, DifficultyConfig> = {
   EASY: {
     label: "سهل",
-    emoji: "🌱",
     icon: Sparkles,
     color: "text-emerald-600",
     bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
@@ -36,7 +37,6 @@ const difficultyMap: Record<Difficulty, DifficultyConfig> = {
   },
   MEDIUM: {
     label: "متوسط",
-    emoji: "⚡",
     icon: Zap,
     color: "text-amber-600",
     bgColor: "bg-amber-50 dark:bg-amber-950/30",
@@ -46,7 +46,6 @@ const difficultyMap: Record<Difficulty, DifficultyConfig> = {
   },
   HARD: {
     label: "صعب",
-    emoji: "🔥",
     icon: Flame,
     color: "text-red-600",
     bgColor: "bg-red-50 dark:bg-red-950/30",
@@ -59,7 +58,7 @@ const difficultyMap: Record<Difficulty, DifficultyConfig> = {
 interface Category {
   id: string;
   label: string;
-  emoji: string;
+  icon: typeof Plus;
   color: string;
 }
 
@@ -67,37 +66,37 @@ const categories: Category[] = [
   {
     id: "ADDITION",
     label: "الجمع",
-    emoji: "➕",
+    icon: Plus,
     color: "hsl(var(--primary))",
   },
   {
     id: "SUBTRACTION",
     label: "الطرح",
-    emoji: "➖",
+    icon: Minus,
     color: "hsl(var(--secondary))",
   },
   {
     id: "MULTIPLICATION",
     label: "الضرب",
-    emoji: "✖️",
+    icon: X,
     color: "hsl(var(--accent))",
   },
   {
     id: "DIVISION",
     label: "القسمة",
-    emoji: "➗",
+    icon: Divide,
     color: "hsl(190, 60%, 50%)",
   },
   {
     id: "COMPARISON",
     label: "المقارنة",
-    emoji: "⚖️",
+    icon: Scale,
     color: "hsl(var(--warning))",
   },
   {
     id: "GEOMETRY",
     label: "الأشكال الهندسية",
-    emoji: "📐",
+    icon: Ruler,
     color: "hsl(var(--success))",
   },
 ];
@@ -269,7 +268,7 @@ const QuizzesPage = () => {
                   className="group bg-card rounded-2xl p-6 shadow-sm border border-border hover:shadow-md hover:border-primary/30 hover:-translate-y-1 transition-all duration-200 active:scale-[0.97] text-center space-y-2 animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${idx * 60}ms` }}
                 >
-                  <span className="text-4xl block group-hover:scale-110 transition-transform duration-200">{cat.emoji}</span>
+                  <cat.icon className="w-12 h-12 block group-hover:scale-110 transition-transform duration-200" style={{ color: cat.color }} />
                   <span className="font-cairo font-bold text-foreground block">{cat.label}</span>
                   <span className="font-cairo text-xs text-muted-foreground">٣ مستويات</span>
                 </button>
@@ -289,7 +288,7 @@ const QuizzesPage = () => {
                   المواضيع
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{selectedCategory.emoji}</span>
+                  <selectedCategory.icon className="w-6 h-6" style={{ color: selectedCategory.color }} />
                   <span className="font-cairo font-bold text-foreground">{selectedCategory.label}</span>
                 </div>
               </div>
@@ -309,7 +308,7 @@ const QuizzesPage = () => {
                       disabled={loading}
                       className={`flex items-center gap-4 p-5 rounded-2xl border-2 ${config.borderColor} ${config.bgColor} transition-all duration-200 active:scale-[0.97] text-start disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
-                      <div className="text-3xl">{config.emoji}</div>
+                      <config.icon className={`w-8 h-8 ${config.color}`} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={`font-cairo font-bold text-lg ${config.color}`}>{config.label}</span>
@@ -340,12 +339,12 @@ const QuizzesPage = () => {
                   المستويات
                 </button>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{selectedCategory.emoji}</span>
+                  <selectedCategory.icon className="w-6 h-6" style={{ color: selectedCategory.color }} />
                   <span className="font-cairo font-bold text-foreground">{selectedCategory.label}</span>
                 </div>
               </div>
               <div className="bg-card rounded-2xl p-10 shadow-sm border border-border text-center space-y-4">
-                <span className="text-6xl block">📭</span>
+                <MailOpen className="w-16 h-16 mx-auto text-muted-foreground" />
                 <h2 className="font-cairo font-extrabold text-xl text-foreground">
                   لا توجد أسئلة كافية
                 </h2>
@@ -388,8 +387,12 @@ const QuizzesPage = () => {
                   المستويات
                 </button>
                 <div className="flex items-center gap-3">
-                  <span className={`font-cairo text-xs font-bold px-2.5 py-1 rounded-full ${difficultyMap[selectedDifficulty].bgColor} ${difficultyMap[selectedDifficulty].color}`}>
-                    {difficultyMap[selectedDifficulty].emoji} {difficultyMap[selectedDifficulty].label}
+                  <span className={`font-cairo text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${difficultyMap[selectedDifficulty].bgColor} ${difficultyMap[selectedDifficulty].color}`}>
+                    {(() => {
+                      const DifficultyIcon = difficultyMap[selectedDifficulty].icon;
+                      return <DifficultyIcon className="w-3 h-3" />;
+                    })()}
+                    {difficultyMap[selectedDifficulty].label}
                   </span>
                   <span className="font-cairo text-sm text-muted-foreground">
                     {currentIndex + 1} / 10
@@ -411,7 +414,7 @@ const QuizzesPage = () => {
               {/* Question card */}
               <div className="bg-card rounded-2xl p-6 md:p-8 shadow-sm border border-border space-y-6">
                 <div className="flex items-start gap-3">
-                  <span className="text-2xl shrink-0">{selectedCategory.emoji}</span>
+                  <selectedCategory.icon className="w-6 h-6 shrink-0 mt-1" style={{ color: selectedCategory.color }} />
                   <h2 className="font-cairo font-bold text-foreground text-lg md:text-xl leading-relaxed">
                     {currentQuestion.question.text}
                   </h2>
@@ -461,11 +464,11 @@ const QuizzesPage = () => {
             <div className="bg-card rounded-2xl p-8 md:p-10 shadow-sm border border-border text-center space-y-6">
               <div className="space-y-3">
                 {correctCount === 10 ? (
-                  <span className="text-6xl block">🏆</span>
+                  <Trophy className="w-16 h-16 mx-auto text-yellow-500" />
                 ) : correctCount >= 6 ? (
-                  <span className="text-6xl block">🎉</span>
+                  <Award className="w-16 h-16 mx-auto text-primary" />
                 ) : (
-                  <span className="text-6xl block">💪</span>
+                  <Dumbbell className="w-16 h-16 mx-auto text-muted-foreground" />
                 )}
 
                 <h2 className="font-cairo font-extrabold text-2xl text-foreground">
@@ -476,8 +479,12 @@ const QuizzesPage = () => {
                       : "حاول مرة أخرى"}
                 </h2>
 
-                <span className={`inline-block font-cairo text-sm font-bold px-3 py-1 rounded-full ${difficultyMap[selectedDifficulty].bgColor} ${difficultyMap[selectedDifficulty].color}`}>
-                  {difficultyMap[selectedDifficulty].emoji} {difficultyMap[selectedDifficulty].label} — {selectedCategory.label}
+                <span className={`inline-flex items-center gap-1 font-cairo text-sm font-bold px-3 py-1 rounded-full ${difficultyMap[selectedDifficulty].bgColor} ${difficultyMap[selectedDifficulty].color}`}>
+                  {(() => {
+                    const DifficultyIcon = difficultyMap[selectedDifficulty].icon;
+                    return <DifficultyIcon className="w-3 h-3" />;
+                  })()}
+                  {difficultyMap[selectedDifficulty].label} — {selectedCategory.label}
                 </span>
               </div>
 

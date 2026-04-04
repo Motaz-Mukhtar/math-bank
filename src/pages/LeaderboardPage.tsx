@@ -13,15 +13,15 @@ import { Podium } from '@/components/leaderboard/Podium';
 import LeaderboardRow from '@/components/leaderboard/LeaderboardRow';
 import PersonalRankCard from '@/components/leaderboard/PersonalRankCard';
 import { Button } from '@/components/ui/button';
-import { Loader2, Trophy, ChevronDown, HelpCircle } from 'lucide-react';
+import { Loader2, Trophy, ChevronDown, HelpCircle, Target, Zap, Flame, Award, Sparkles, MailOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BADGE_LEGEND = [
-  { icon: '⭐', label: 'نجم الأسبوع', desc: 'أعلى نقاط هذا الأسبوع' },
-  { icon: '🚀', label: 'متقدم سريع', desc: '٥٠ نقطة أو أكثر في آخر ٢٤ ساعة' },
-  { icon: '🔥', label: 'متسق', desc: 'نشاط في ٥ أيام أو أكثر خلال ٧ أيام' },
-  { icon: '🏆', label: 'بطل الفئة', desc: 'الأعلى نقاطاً في فئة معينة' },
-  { icon: '✨', label: 'وافد جديد', desc: 'حساب جديد مع جلسة واحدة على الأقل' },
+  { icon: 'star', label: 'نجم الأسبوع', desc: 'أعلى نقاط هذا الأسبوع' },
+  { icon: 'rocket', label: 'متقدم سريع', desc: '٥٠ نقطة أو أكثر في آخر ٢٤ ساعة' },
+  { icon: 'fire', label: 'متسق', desc: 'نشاط في ٥ أيام أو أكثر خلال ٧ أيام' },
+  { icon: 'trophy', label: 'بطل الفئة', desc: 'الأعلى نقاطاً في فئة معينة' },
+  { icon: 'sparkle', label: 'وافد جديد', desc: 'حساب جديد مع جلسة واحدة على الأقل' },
 ];
 
 const SkeletonRow = () => (
@@ -226,17 +226,44 @@ const LeaderboardPage = () => {
 
           {/* Empty weekly state */}
           {!loading && !error && period === 'weekly' && entries.length === 0 && (
-            <div className="text-center space-y-4 py-12">
-              <p className="text-4xl">📭</p>
-              <p className="font-cairo font-bold text-foreground">
-                لا يوجد نشاط هذا الأسبوع بعد — كن أول المتصدرين!
-              </p>
-              <Button
-                onClick={() => navigate('/quizzes')}
-                className="font-cairo font-bold gap-2"
-              >
-                ابدأ الاختبار الآن
-              </Button>
+            <div className="text-center space-y-4 py-12 animate-in fade-in duration-500">
+              <div className="w-24 h-24 mx-auto bg-muted/50 rounded-full flex items-center justify-center">
+                <MailOpen className="w-12 h-12 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <p className="font-cairo font-bold text-xl text-foreground">
+                  لا يوجد نشاط هذا الأسبوع بعد
+                </p>
+                <p className="font-cairo text-muted-foreground text-sm max-w-md mx-auto">
+                  الأسبوع يبدأ من يوم السبت. كن أول من يتصدر القائمة هذا الأسبوع!
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                <Button
+                  onClick={() => navigate('/quizzes')}
+                  className="font-cairo font-bold gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  ابدأ اختبار
+                </Button>
+                <Button
+                  onClick={() => navigate('/wheel')}
+                  variant="outline"
+                  className="font-cairo font-bold gap-2"
+                >
+                  <Target className="w-4 h-4" />
+                  جرب عجلة الحظ
+                </Button>
+              </div>
+              <div className="pt-4">
+                <Button
+                  onClick={() => handlePeriodChange('all')}
+                  variant="ghost"
+                  className="font-cairo text-sm text-muted-foreground hover:text-foreground"
+                >
+                  عرض الترتيب الكلي ←
+                </Button>
+              </div>
             </div>
           )}
 

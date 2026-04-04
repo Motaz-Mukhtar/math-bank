@@ -97,3 +97,80 @@ export const createVideo = async (data: {
   );
   return response.data.data;
 };
+
+/**
+ * Update video category (Admin only)
+ * PUT /api/v1/video-categories/:id
+ */
+export const updateVideoCategory = async (
+  id: string,
+  data: {
+    name?: string;
+    description?: string;
+    sortOrder?: number;
+  }
+): Promise<VideoCategory> => {
+  const response = await apiClient.put<ApiResponse<VideoCategory>>(
+    `/video-categories/${id}`,
+    data
+  );
+  return response.data.data;
+};
+
+/**
+ * Delete video category (Admin only)
+ * DELETE /api/v1/video-categories/:id
+ */
+export const deleteVideoCategory = async (id: string): Promise<{ message: string }> => {
+  const response = await apiClient.delete<ApiResponse<{ message: string }>>(
+    `/video-categories/${id}`
+  );
+  return response.data.data;
+};
+
+/**
+ * Update video (Admin only)
+ * PUT /api/v1/videos/:id
+ */
+export const updateVideo = async (
+  id: string,
+  data: {
+    title?: string;
+    description?: string;
+    url?: string;
+    categoryId?: string;
+    sortOrder?: number;
+  }
+): Promise<Video> => {
+  const response = await apiClient.put<ApiResponse<Video>>(
+    `/videos/${id}`,
+    data
+  );
+  return response.data.data;
+};
+
+/**
+ * Delete video (Admin only)
+ * DELETE /api/v1/videos/:id
+ */
+export const deleteVideo = async (id: string): Promise<{ message: string }> => {
+  const response = await apiClient.delete<ApiResponse<{ message: string }>>(
+    `/videos/${id}`
+  );
+  return response.data.data;
+};
+
+/**
+ * Move video to different category (Admin only)
+ * PATCH /api/v1/videos/:id/move
+ */
+export const moveVideo = async (
+  id: string,
+  categoryId: string
+): Promise<Video> => {
+  const response = await apiClient.patch<ApiResponse<Video>>(
+    `/videos/${id}/move`,
+    { categoryId }
+  );
+  return response.data.data;
+};

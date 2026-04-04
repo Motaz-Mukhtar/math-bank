@@ -16,11 +16,13 @@ import {
   AdminUsersTable,
   AdminEditUserDialog,
   AdminDeleteUserDialog,
+  VideoManagement,
+  CategoryManagement,
 } from "@/components/admin";
-import { Loader2, ShieldCheck, LayoutDashboard, BarChart3, Settings, Database } from "lucide-react";
+import { Loader2, ShieldCheck, LayoutDashboard, BarChart3, Settings, Database, Video } from "lucide-react";
 import { toast } from "sonner";
 
-type AdminSection = "overview" | "analytics" | "content" | "users";
+type AdminSection = "overview" | "analytics" | "content" | "users" | "videos";
 
 const AdminDashboard = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -104,6 +106,7 @@ const AdminDashboard = () => {
     { id: "overview",  label: "نظرة عامة",      icon: LayoutDashboard },
     { id: "analytics", label: "الإحصائيات",      icon: BarChart3 },
     { id: "content",   label: "إدارة المحتوى",   icon: Settings },
+    { id: "videos",    label: "الفيديوهات",      icon: Video },
     { id: "users",     label: "المستخدمون",       icon: Database },
   ];
 
@@ -173,6 +176,14 @@ const AdminDashboard = () => {
           {activeSection === "content" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-400">
               <AdminContentManager />
+            </div>
+          )}
+
+          {/* ── Videos & Categories ── */}
+          {activeSection === "videos" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-400 space-y-6">
+              <CategoryManagement />
+              <VideoManagement />
             </div>
           )}
 

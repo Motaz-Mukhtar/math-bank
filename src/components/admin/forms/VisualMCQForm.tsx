@@ -56,15 +56,29 @@ interface VisualMCQFormProps {
 }
 
 const DEFAULT_CHOICES: VisualMCQChoice[] = [
-  { params: {}, label: 'A' },
-  { params: {}, label: 'B' },
-  { params: {}, label: 'C' },
-  { params: {}, label: 'D' },
+  { params: { shape: 'circle', color: '#3b82f6' }, label: 'A' },
+  { params: { shape: 'square', color: '#ef4444' }, label: 'B' },
+  { params: { shape: 'triangle', color: '#10b981' }, label: 'C' },
+  { params: { shape: 'rectangle', color: '#f59e0b' }, label: 'D' },
 ];
+
+// Default params for each SVG type
+const DEFAULT_PARAMS_BY_TYPE: Record<SVGType, Record<string, unknown>> = {
+  [SVGType.FRACTION_CIRCLE]: { numerator: 1, denominator: 4 },
+  [SVGType.FRACTION_RECT]: { numerator: 2, denominator: 4 },
+  [SVGType.FRACTION_GROUP]: { total: 6, shaded: 3, shape: 'circle' },
+  [SVGType.SHAPE_2D]: { shape: 'circle', color: '#3b82f6' },
+  [SVGType.SHAPE_3D]: { shape: 'cube', color: '#3b82f6' },
+  [SVGType.DOT_ARRAY]: { rows: 3, cols: 4 },
+  [SVGType.SYMMETRY]: { type: 'vertical' },
+  [SVGType.GRID_AREA]: { rows: 4, cols: 4, shadedCells: [0, 1, 4, 5] },
+  [SVGType.BAR_CHART]: { values: [3, 5, 2, 7], labels: ['A', 'B', 'C', 'D'] },
+  [SVGType.CLOCK_FACE]: { hours: 3, minutes: 15 },
+};
 
 export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
   const [svgType, setSvgType] = useState<SVGType>(
-    value?.svgType || SVGType.FRACTION_CIRCLE
+    value?.svgType || SVGType.SHAPE_2D
   );
   const [choices, setChoices] = useState<VisualMCQChoice[]>(
     value?.choices || DEFAULT_CHOICES
@@ -73,6 +87,18 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
     value?.answer || '0'
   );
 
+  // Update choices with default params when SVG type changes
+  const handleSvgTypeChange = (newType: SVGType) => {
+    setSvgType(newType);
+    
+    // Update all choices with default params for the new type
+    const defaultParams = DEFAULT_PARAMS_BY_TYPE[newType] || {};
+    const newChoices = choices.map((choice, index) => ({
+      ...choice,
+      params: Object.keys(choice.params).length === 0 ? defaultParams : choice.params,
+    }));
+    setChoices(newChoices);
+  };
   // Emit changes to parent
   useEffect(() => {
     onChange({
@@ -108,7 +134,7 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
         </Label>
         <Select
           value={svgType}
-          onValueChange={(value) => setSvgType(value as SVGType)}
+          onValueChange={handleSvgTypeChange}
         >
           <SelectTrigger id="svg-type" className="w-full">
             <SelectValue placeholder="اختر نوع الرسم" />
@@ -166,9 +192,13 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
                 id={`params-${index}`}
                 value={JSON.stringify(choice.params)}
                 onChange={(e) => handleParamsChange(index, e.target.value)}
-                placeholder='{"numerator": 1, "denominator": 4}'
+                placeholder={JSON.stringify(DEFAULT_PARAMS_BY_TYPE[svgType] || {})}
                 className="w-full font-mono text-sm"
+                dir="ltr"
               />
+              <p className="text-xs text-muted-foreground">
+                مثال: {JSON.stringify(DEFAULT_PARAMS_BY_TYPE[svgType] || {})}
+              </p>
             </div>
           </div>
         ))}

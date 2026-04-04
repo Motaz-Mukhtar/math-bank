@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
       console.error('Failed to refresh user:', error);
+      // Don't clear auth on refresh failure - user might just be offline
     }
   };
 
@@ -68,8 +69,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const userData = JSON.parse(storedUser);
           setUser(userData);
           
-          // Optionally refresh user data from server
-          await refreshUser();
+          // Only refresh user data if not on login/signup pages
+          const isAuthPage = window.location.pathname.includes('/login') || 
+                            window.location.pathname.includes('/signup') ||
+                            window.location.pathname.includes('/verify-email');
+          
+          if (!isAuthPage) {
+            // Optionally refresh user data from server
+            await refreshUser();
+          }
         } catch (error) {
           console.error('Failed to parse stored user:', error);
           localStorage.removeItem('accessToken');

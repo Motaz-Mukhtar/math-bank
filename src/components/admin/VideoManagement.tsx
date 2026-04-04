@@ -1,0 +1,466 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Pencil, Trash2, Video, ExternalLink, MoveRight } from "lucide-react";
+import { toast } from "sonner";
+import {
+  getVideos,
+  getCategories,
+  updateVideo,
+  deleteVideo,
+  moveVideo,
+  type Video as VideoType,
+  type VideoCategory,
+} from "@/services/video.api";
+
+export const VideoManagement = () => {
+  const [videos, setVideos] = useState<VideoType[]>([]);
+  const [categories, setCategories] = useState<VideoCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
+  const [deletingVideo, setDeletingVideo] = useState<VideoType | null>(null);
+  const [movingVideo, setMovingVideo] = useState<VideoType | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Edit form state
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editUrl, setEditUrl] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState("");
+  const [editSortOrder, setEditSortOrder] = useState("");
+
+  // Move form state
+  const [moveTargetCategoryId, setMoveTargetCategoryId] = useState("");
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [videosData, categoriesData] = await Promise.all([
+        getVideos(),
+        getCategories(),
+      ]);
+      setVideos(videosData);
+      setCategories(categoriesData);
+    } catch (error: any) {
+      console.error("Failed to fetch data:", error);
+      toast.error("فشل تحميل البيانات");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (video: VideoType) => {
+    setEditingVideo(video);
+    setEditTitle(video.title);
+    setEditDescription(video.description || "");
+    setEditUrl(video.url);
+    setEditCategoryId(video.categoryId);
+    setEditSortOrder(video.sortOrder.toString());
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingVideo) return;
+
+    if (!editTitle.trim()) {
+      toast.error("عنوان الفيديو مطلوب");
+      return;
+    }
+
+    if (!editUrl.trim()) {
+      toast.error("رابط الفيديو مطلوب");
+      return;
+    }
+
+    const sortOrder = parseInt(editSortOrder);
+    if (isNaN(sortOrder)) {
+      toast.error("ترتيب العرض يجب أن يكون رقم");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updateVideo(editingVideo.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim() || undefined,
+        url: editUrl.trim(),
+        categoryId: editCategoryId,
+        sortOrder,
+      });
+
+      toast.success("تم تحديث الفيديو بنجاح");
+      setEditingVideo(null);
+      await fetchData();
+    } catch (error: any) {
+      console.error("Failed to update video:", error);
+      toast.error(error.response?.data?.error || "فشل تحديث الفيديو");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingVideo) return;
+
+    setSaving(true);
+    try {
+      await deleteVideo(deletingVideo.id);
+      toast.success("تم حذف الفيديو بنجاح");
+      setDeletingVideo(null);
+      await fetchData();
+    } catch (error: any) {
+      console.error("Failed to delete video:", error);
+      toast.error(error.response?.data?.error || "فشل حذف الفيديو");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleMove = (video: VideoType) => {
+    setMovingVideo(video);
+    setMoveTargetCategoryId(video.categoryId);
+  };
+
+  const handleSaveMove = async () => {
+    if (!movingVideo) return;
+
+    if (!moveTargetCategoryId) {
+      toast.error("يجب اختيار الفصل المستهدف");
+      return;
+    }
+
+    if (moveTargetCategoryId === movingVideo.categoryId) {
+      toast.error("الفيديو موجود بالفعل في هذا الفصل");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await moveVideo(movingVideo.id, moveTargetCategoryId);
+      toast.success("تم نقل الفيديو بنجاح");
+      setMovingVideo(null);
+      await fetchData();
+    } catch (error: any) {
+      console.error("Failed to move video:", error);
+      toast.error(error.response?.data?.error || "فشل نقل الفيديو");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    return categories.find((c) => c.id === categoryId)?.name || "غير معروف";
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-16">
+          <Loader2 className="w-7 h-7 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card className="shadow-md">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Video className="w-5 h-5 text-primary" />
+            إدارة الفيديوهات ({videos.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {videos.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              لا توجد فيديوهات
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right font-cairo">العنوان</TableHead>
+                    <TableHead className="text-right font-cairo">الفصل</TableHead>
+                    <TableHead className="text-right font-cairo">الترتيب</TableHead>
+                    <TableHead className="text-right font-cairo">الرابط</TableHead>
+                    <TableHead className="text-right font-cairo">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {videos.map((video) => (
+                    <TableRow key={video.id}>
+                      <TableCell className="font-medium font-cairo">
+                        {video.title}
+                      </TableCell>
+                      <TableCell className="font-cairo">
+                        {getCategoryName(video.categoryId)}
+                      </TableCell>
+                      <TableCell className="font-cairo">{video.sortOrder}</TableCell>
+                      <TableCell>
+                        <a
+                          href={video.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          فتح
+                        </a>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(video)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMove(video)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoveRight className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeletingVideo(video)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingVideo} onOpenChange={() => setEditingVideo(null)}>
+        <DialogContent className="font-cairo" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل الفيديو</DialogTitle>
+            <DialogDescription>
+              قم بتعديل معلومات الفيديو
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>عنوان الفيديو</Label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="عنوان الفيديو"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>الوصف</Label>
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="وصف الفيديو (اختياري)"
+                className="min-h-[80px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>رابط الفيديو</Label>
+              <Input
+                value={editUrl}
+                onChange={(e) => setEditUrl(e.target.value)}
+                placeholder="https://..."
+                dir="ltr"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>الفصل</Label>
+              <Select value={editCategoryId} onValueChange={setEditCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الفصل" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>ترتيب العرض</Label>
+              <Input
+                type="number"
+                min="0"
+                value={editSortOrder}
+                onChange={(e) => setEditSortOrder(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingVideo(null)}
+              disabled={saving}
+            >
+              إلغاء
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "حفظ التغييرات"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move Dialog */}
+      <Dialog open={!!movingVideo} onOpenChange={() => setMovingVideo(null)}>
+        <DialogContent className="font-cairo" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>نقل الفيديو</DialogTitle>
+            <DialogDescription>
+              اختر الفصل الذي تريد نقل الفيديو إليه
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>الفصل الحالي</Label>
+              <Input
+                value={movingVideo ? getCategoryName(movingVideo.categoryId) : ""}
+                disabled
+                className="bg-muted"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>الفصل الجديد</Label>
+              <Select
+                value={moveTargetCategoryId}
+                onValueChange={setMoveTargetCategoryId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الفصل" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setMovingVideo(null)}
+              disabled={saving}
+            >
+              إلغاء
+            </Button>
+            <Button onClick={handleSaveMove} disabled={saving}>
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "نقل الفيديو"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={!!deletingVideo} onOpenChange={() => setDeletingVideo(null)}>
+        <DialogContent className="font-cairo" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>حذف الفيديو</DialogTitle>
+            <DialogDescription>
+              هل أنت متأكد من حذف هذا الفيديو؟ لا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deletingVideo && (
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="font-semibold">{deletingVideo.title}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                الفصل: {getCategoryName(deletingVideo.categoryId)}
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeletingVideo(null)}
+              disabled={saving}
+            >
+              إلغاء
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "حذف"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};

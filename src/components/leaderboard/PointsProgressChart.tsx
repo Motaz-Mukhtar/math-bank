@@ -3,7 +3,13 @@ import {
 } from 'recharts';
 
 const DAY_LABELS: Record<number, string> = {
-  0: 'أحد', 1: 'إث', 2: 'ثل', 3: 'أرب', 4: 'خم', 5: 'جم', 6: 'سبت',
+  0: 'أحد',
+  1: 'إث',
+  2: 'ثل',
+  3: 'أرب',
+  4: 'خم',
+  5: 'جم',
+  6: 'سبت',
 };
 
 interface PointsProgressChartProps {
@@ -27,7 +33,7 @@ const PointsProgressChart = ({ history }: PointsProgressChartProps) => {
     ...d,
     dayLabel: DAY_LABELS[new Date(d.date + 'T12:00:00').getDay()] ?? d.date,
     isToday: d.date === today,
-  }));
+  })).reverse(); // Reverse for RTL display: Saturday (سبت) on right, Friday (جم) on left
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;

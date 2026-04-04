@@ -188,7 +188,7 @@ const FractionGroup: React.FC<{ params: Record<string, unknown>; size: number }>
 // ─── Shape 2D ────────────────────────────────────────────────────────────────
 
 interface Shape2DParams {
-  shape: 'circle' | 'square' | 'triangle' | 'rectangle';
+  shape: 'circle' | 'square' | 'triangle' | 'rectangle' | 'pentagon' | 'hexagon';
   color?: string;
 }
 
@@ -199,6 +199,18 @@ const Shape2D: React.FC<{ params: Record<string, unknown>; size: number }> = ({
   const { shape = 'circle', color = '#3b82f6' } = params as Shape2DParams;
   const center = size / 2;
   const shapeSize = size * 0.6;
+
+  // Validate shape parameter
+  if (!shape || typeof shape !== 'string') {
+    console.warn('Invalid shape parameter:', params);
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <text x={center} y={center} textAnchor="middle" fontSize={size * 0.1} fill="red">
+          Invalid Shape
+        </text>
+      </svg>
+    );
+  }
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -241,6 +253,41 @@ const Shape2D: React.FC<{ params: Record<string, unknown>; size: number }> = ({
           stroke="black"
           strokeWidth="2"
         />
+      )}
+      {shape === 'pentagon' && (
+        <polygon
+          points={[0, 1, 2, 3, 4]
+            .map((i) => {
+              const angle = (i * 72 - 90) * (Math.PI / 180);
+              const x = center + (shapeSize / 2) * Math.cos(angle);
+              const y = center + (shapeSize / 2) * Math.sin(angle);
+              return `${x},${y}`;
+            })
+            .join(' ')}
+          fill={color}
+          stroke="black"
+          strokeWidth="2"
+        />
+      )}
+      {shape === 'hexagon' && (
+        <polygon
+          points={[0, 1, 2, 3, 4, 5]
+            .map((i) => {
+              const angle = (i * 60 - 90) * (Math.PI / 180);
+              const x = center + (shapeSize / 2) * Math.cos(angle);
+              const y = center + (shapeSize / 2) * Math.sin(angle);
+              return `${x},${y}`;
+            })
+            .join(' ')}
+          fill={color}
+          stroke="black"
+          strokeWidth="2"
+        />
+      )}
+      {!['circle', 'square', 'triangle', 'rectangle', 'pentagon', 'hexagon'].includes(shape) && (
+        <text x={center} y={center} textAnchor="middle" fontSize={size * 0.08} fill="red">
+          Unknown: {shape}
+        </text>
       )}
     </svg>
   );

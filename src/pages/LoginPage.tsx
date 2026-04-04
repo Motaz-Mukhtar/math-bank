@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { login } from "@/services/auth.api";
-import { Calculator, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Calculator, Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 const LoginPage = () => {
@@ -35,11 +35,16 @@ const LoginPage = () => {
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "حدث خطأ أثناء تسجيل الدخول";
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+      // setError(errorMessage);
+      toast.error(errorMessage, {
+        duration: 5000, // Show toast for 5 seconds,
+        position: 'top-center'
+      });
+      setLoading(false); // Set loading to false here to prevent re-render
+      return; // Return early to prevent finally block
     }
+    
+    setLoading(false);
   };
 
   return (
@@ -56,8 +61,11 @@ const LoginPage = () => {
 
         <form onSubmit={handleLogin} className="bg-card rounded-2xl p-6 shadow-sm space-y-4">
           {error && (
-            <div className="bg-destructive/10 text-destructive text-sm font-cairo rounded-xl px-4 py-3">
-              {error}
+            <div className="bg-destructive/10 text-destructive text-sm font-cairo rounded-xl px-4 py-3 border border-destructive/20 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span className="flex-1">{error}</span>
+              </div>
             </div>
           )}
 

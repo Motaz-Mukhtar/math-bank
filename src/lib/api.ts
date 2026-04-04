@@ -34,6 +34,16 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
       (originalRequest as any)._retry = true;
 
+      // Don't try to refresh on login/register endpoints
+      const isAuthEndpoint = originalRequest.url?.includes('/auth/login') || 
+                            originalRequest.url?.includes('/auth/register') ||
+                            originalRequest.url?.includes('/auth/verify-email');
+      
+      if (isAuthEndpoint) {
+        // For auth endpoints, just return the error without redirecting
+        return Promise.reject(error);
+      }
+
       try {
         // Try to refresh the token
         const response = await axios.post<ApiResponse<{ accessToken: string }>>(
@@ -52,7 +62,11 @@ apiClient.interceptors.response.use(
         // Refresh failed - clear auth and redirect to login
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

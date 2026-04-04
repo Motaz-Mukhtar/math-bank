@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, TrendingUp, Award } from "lucide-react";
+import { BookOpen, TrendingUp, Award, Plus, Minus, X, Divide, Scale, Ruler } from "lucide-react";
 import { getChildProgress } from "@/services/parent.api";
 
 
@@ -16,13 +16,13 @@ interface QuizHistory {
   totalScore: number;
 }
 
-const topicLabels: Record<string, { label: string; emoji: string }> = {
-  addition: { label: "الجمع", emoji: "➕" },
-  subtraction: { label: "الطرح", emoji: "➖" },
-  multiplication: { label: "الضرب", emoji: "✖️" },
-  division: { label: "القسمة", emoji: "➗" },
-  comparison: { label: "المقارنة", emoji: "⚖️" },
-  geometry: { label: "الأشكال الهندسية", emoji: "📐" },
+const topicLabels: Record<string, { label: string; icon: typeof Plus }> = {
+  addition: { label: "الجمع", icon: Plus },
+  subtraction: { label: "الطرح", icon: Minus },
+  multiplication: { label: "الضرب", icon: X },
+  division: { label: "القسمة", icon: Divide },
+  comparison: { label: "المقارنة", icon: Scale },
+  geometry: { label: "الأشكال الهندسية", icon: Ruler },
 };
 
 const difficultyLabels: Record<string, { label: string; color: string; bg: string }> = {
@@ -106,7 +106,7 @@ const StudentQuizHistory = ({ studentProfileId, studentName }: Props) => {
       {/* Recent results */}
       <div className="space-y-2">
         {results.slice(0, 5).map((r) => {
-          const topic = topicLabels[r.category] || { label: r.category, emoji: "📝" };
+          const topic = topicLabels[r.category] || { label: r.category, icon: FileText };
           const diff = difficultyLabels[r.level] || { label: r.level, color: "text-muted-foreground", bg: "bg-muted" };
           const pct = Math.round((r.totalScore / r.totalQuestions) * 100);
 
@@ -115,7 +115,7 @@ const StudentQuizHistory = ({ studentProfileId, studentName }: Props) => {
               key={r.sessionId}
               className="flex items-center gap-3 bg-card rounded-xl border border-border p-3"
             >
-              <span className="text-xl shrink-0">{topic.emoji}</span>
+              <topic.icon className="w-5 h-5 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-cairo font-semibold text-sm text-foreground truncate">{topic.label}</span>

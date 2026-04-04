@@ -6,3 +6,5 @@ export { default as AdminExportSection } from './AdminExportSection';
 export { default as AdminUsersTable } from './AdminUsersTable';
 export { default as AdminEditUserDialog } from './AdminEditUserDialog';
 export { default as AdminDeleteUserDialog } from './AdminDeleteUserDialog';
+export { VideoManagement } from './VideoManagement';
+export { CategoryManagement } from './CategoryManagement';
