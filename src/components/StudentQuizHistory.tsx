@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, TrendingUp, Award, Plus, Minus, X, Divide, Scale, Ruler } from "lucide-react";
+import { BookOpen, TrendingUp, Award, Plus, Minus, X, Divide, Scale, Ruler, FileText } from "lucide-react";
 import { getChildProgress } from "@/services/parent.api";
 
 
