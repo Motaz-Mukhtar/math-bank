@@ -179,3 +179,14 @@ export const exportUsers = async (type: 'students' | 'parents' | 'all'): Promise
   );
   return response.data.data;
 };
+
+/**
+ * Get parent's linked children (admin view)
+ * GET /api/v1/admin/users/:parentId/children
+ */
+export const getParentChildren = async (parentId: string): Promise<any[]> => {
+  const response = await apiClient.get<ApiResponse<any[]>>(
+    `/admin/users/${parentId}/children`
+  );
+  return response.data.data;
+};

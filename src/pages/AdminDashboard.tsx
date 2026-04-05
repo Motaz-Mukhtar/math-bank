@@ -105,7 +105,7 @@ const AdminDashboard = () => {
   const navItems: { id: AdminSection; label: string; icon: typeof LayoutDashboard }[] = [
     { id: "overview",  label: "نظرة عامة",      icon: LayoutDashboard },
     { id: "analytics", label: "الإحصائيات",      icon: BarChart3 },
-    { id: "content",   label: "إدارة المحتوى",   icon: Settings },
+    { id: "content",   label: "إدارة الأسئلة",   icon: Settings },
     { id: "videos",    label: "الفيديوهات",      icon: Video },
     { id: "users",     label: "المستخدمون",       icon: Database },
   ];
@@ -172,7 +172,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* ── Content Management ── */}
+          {/* ── Question Management ── */}
           {activeSection === "content" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-400">
               <AdminContentManager />

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Pencil, Trash2, FolderOpen, Plus } from "lucide-react";
+import { Loader2, Pencil, Trash2, FolderOpen, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   getCategories,
@@ -32,7 +32,9 @@ import {
 
 export const CategoryManagement = () => {
   const [categories, setCategories] = useState<VideoCategory[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<VideoCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editingCategory, setEditingCategory] = useState<VideoCategory | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<VideoCategory | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -46,6 +48,22 @@ export const CategoryManagement = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    // Filter categories based on search query
+    if (!searchQuery.trim()) {
+      setFilteredCategories(categories);
+    } else {
+      const query = searchQuery.toLowerCase();
+      setFilteredCategories(
+        categories.filter(
+          (cat) =>
+            cat.name.toLowerCase().includes(query) ||
+            cat.description?.toLowerCase().includes(query)
+        )
+      );
+    }
+  }, [searchQuery, categories]);
 
   const fetchCategories = async () => {
     try {
@@ -150,21 +168,32 @@ export const CategoryManagement = () => {
     <>
       <Card className="shadow-md">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <FolderOpen className="w-5 h-5 text-primary" />
-              إدارة الفصول ({categories.length})
+              إدارة الفصول ({filteredCategories.length})
             </CardTitle>
-            <Button onClick={handleCreate} className="gap-2 font-cairo">
-              <Plus className="w-4 h-4" />
-              إضافة فصل
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="بحث بالاسم..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10 font-cairo text-sm w-52 h-9"
+                />
+              </div>
+              <Button onClick={handleCreate} className="gap-2 font-cairo">
+                <Plus className="w-4 h-4" />
+                إضافة فصل
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          {categories.length === 0 ? (
+          {filteredCategories.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              لا توجد فصول
+              {searchQuery ? "لا توجد نتائج للبحث" : "لا توجد فصول"}
             </div>
           ) : (
             <div className="rounded-md border">
@@ -179,7 +208,7 @@ export const CategoryManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {categories.map((category) => (
+                  {filteredCategories.map((category) => (
                     <TableRow key={category.id}>
                       <TableCell className="font-medium font-cairo">
                         {category.name}

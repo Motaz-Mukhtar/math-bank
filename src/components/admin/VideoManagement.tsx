@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Pencil, Trash2, Video, ExternalLink, MoveRight, Plus } from "lucide-react";
+import { Loader2, Pencil, Trash2, Video, ExternalLink, MoveRight, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import {
   getVideos,
@@ -42,8 +42,11 @@ import {
 
 export const VideoManagement = () => {
   const [videos, setVideos] = useState<VideoType[]>([]);
+  const [filteredVideos, setFilteredVideos] = useState<VideoType[]>([]);
   const [categories, setCategories] = useState<VideoCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
   const [deletingVideo, setDeletingVideo] = useState<VideoType | null>(null);
   const [movingVideo, setMovingVideo] = useState<VideoType | null>(null);
@@ -63,6 +66,27 @@ export const VideoManagement = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    // Filter videos based on search query and category
+    let filtered = videos;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (video) =>
+          video.title.toLowerCase().includes(query) ||
+          video.description?.toLowerCase().includes(query) ||
+          getCategoryName(video.categoryId).toLowerCase().includes(query)
+      );
+    }
+
+    if (categoryFilter !== "ALL") {
+      filtered = filtered.filter((video) => video.categoryId === categoryFilter);
+    }
+
+    setFilteredVideos(filtered);
+  }, [searchQuery, categoryFilter, videos]);
 
   const fetchData = async () => {
     try {
@@ -229,21 +253,47 @@ export const VideoManagement = () => {
     <>
       <Card className="shadow-md">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Video className="w-5 h-5 text-primary" />
-              إدارة الفيديوهات ({videos.length})
-            </CardTitle>
-            <Button onClick={handleCreate} className="gap-2 font-cairo">
-              <Plus className="w-4 h-4" />
-              إضافة فيديو
-            </Button>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Video className="w-5 h-5 text-primary" />
+                إدارة الفيديوهات ({filteredVideos.length})
+              </CardTitle>
+              <Button onClick={handleCreate} className="gap-2 font-cairo">
+                <Plus className="w-4 h-4" />
+                إضافة فيديو
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="بحث بالعنوان أو الفصل..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-10 font-cairo text-sm h-9"
+                />
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-48 font-cairo text-sm h-9">
+                  <SelectValue placeholder="جميع الفصول" />
+                </SelectTrigger>
+                <SelectContent className="font-cairo">
+                  <SelectItem value="ALL">جميع الفصول</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          {videos.length === 0 ? (
+          {filteredVideos.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              لا توجد فيديوهات
+              {searchQuery || categoryFilter !== "ALL" ? "لا توجد نتائج للبحث" : "لا توجد فيديوهات"}
             </div>
           ) : (
             <div className="rounded-md border">
@@ -258,7 +308,7 @@ export const VideoManagement = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {videos.map((video) => (
+                  {filteredVideos.map((video) => (
                     <TableRow key={video.id}>
                       <TableCell className="font-medium font-cairo">
                         {video.title}

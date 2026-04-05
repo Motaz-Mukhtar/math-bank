@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getUsers, type UserWithPoints } from "@/services/admin.api";
+import { getUsers, getParentChildren, type UserWithPoints } from "@/services/admin.api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,15 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Search, Database, Star, Loader2, Pencil, Trash2,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Users, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +38,11 @@ const AdminUsersTable = ({ currentUserId, onEdit, onDelete }: AdminUsersTablePro
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+
+  // Parent details dialog
+  const [viewingParent, setViewingParent] = useState<UserWithPoints | null>(null);
+  const [parentChildren, setParentChildren] = useState<any[]>([]);
+  const [loadingChildren, setLoadingChildren] = useState(false);
 
   const fetchUsers = useCallback(async (p: number, s: string, r: string) => {
     try {
@@ -66,6 +78,20 @@ const AdminUsersTable = ({ currentUserId, onEdit, onDelete }: AdminUsersTablePro
     setRoleFilter(r); setPage(1); fetchUsers(1, search, r);
   };
   const handlePageChange = (p: number) => { setPage(p); fetchUsers(p, search, roleFilter); };
+
+  const handleViewParent = async (parent: UserWithPoints) => {
+    setViewingParent(parent);
+    setLoadingChildren(true);
+    try {
+      const children = await getParentChildren(parent.id);
+      setParentChildren(children);
+    } catch (error: any) {
+      toast.error("فشل تحميل بيانات الأطفال");
+      setParentChildren([]);
+    } finally {
+      setLoadingChildren(false);
+    }
+  };
 
   return (
     <Card className="shadow-md animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -164,6 +190,15 @@ const AdminUsersTable = ({ currentUserId, onEdit, onDelete }: AdminUsersTablePro
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
+                          {u.role === "PARENT" && (
+                            <button
+                              onClick={() => handleViewParent(u)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors active:scale-95"
+                              title="عرض الأطفال المرتبطين"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => onEdit(u)}
                             className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors active:scale-95"
@@ -241,6 +276,76 @@ const AdminUsersTable = ({ currentUserId, onEdit, onDelete }: AdminUsersTablePro
           </>
         )}
       </CardContent>
+
+      {/* Parent Details Dialog */}
+      <Dialog open={!!viewingParent} onOpenChange={() => setViewingParent(null)}>
+        <DialogContent className="font-cairo max-w-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              تفاصيل حساب ولي الأمر
+            </DialogTitle>
+            <DialogDescription>
+              الأطفال المرتبطين بحساب {viewingParent?.fullName}
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingChildren ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : parentChildren.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              لا يوجد أطفال مرتبطين بهذا الحساب
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right font-cairo">الاسم</TableHead>
+                      <TableHead className="text-right font-cairo">الرقم الأكاديمي</TableHead>
+                      <TableHead className="text-right font-cairo">النقاط</TableHead>
+                      <TableHead className="text-right font-cairo">الترتيب</TableHead>
+                      <TableHead className="text-right font-cairo">تاريخ الربط</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {parentChildren.map((child) => (
+                      <TableRow key={child.childId}>
+                        <TableCell className="font-medium font-cairo">
+                          {child.fullName}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {child.academicNumber}
+                        </TableCell>
+                        <TableCell>
+                          <span className="flex items-center gap-1 text-primary font-bold">
+                            <Star className="w-3.5 h-3.5" />
+                            {child.points || 0}
+                          </span>
+                        </TableCell>
+                        <TableCell className="font-cairo">
+                          {child.rank ? `#${child.rank}` : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(child.createdAt).toLocaleDateString("ar-SA")}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">
+                  إجمالي الأطفال المرتبطين: <span className="font-bold text-foreground">{parentChildren.length}</span>
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

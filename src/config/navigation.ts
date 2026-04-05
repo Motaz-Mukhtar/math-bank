@@ -28,13 +28,13 @@ export const navigationLinks: NavLink[] = [
     label: "الاختبارات",
     href: "/quizzes",
     isLeaderboard: false,
-    allowedRoles: ['STUDENT', 'ADMIN'], // Only students and admins
+    allowedRoles: ['STUDENT'], // Only students and admins
   },
   {
     label: "العجلة",
     href: "/wheel",
     isLeaderboard: false,
-    allowedRoles: ['STUDENT', 'ADMIN'], // Only students and admins
+    allowedRoles: ['STUDENT'], // Only students and admins
   },
   {
     label: "الترتيب",

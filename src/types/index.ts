@@ -1,10 +1,12 @@
 // User types
+export type Role = 'STUDENT' | 'PARENT' | 'ADMIN';
+
 export interface User {
   id: string;
   fullName: string;
   email: string;
   phone?: string | null;
-  role: 'STUDENT' | 'PARENT' | 'ADMIN';
+  role: Role;
   academicNumber?: string | null;
   isEmailVerified: boolean;
   createdAt: string;
