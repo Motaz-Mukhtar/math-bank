@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, Calculator, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import NotificationsBell from "@/components/NotificationsBell";
+// import NotificationsBell from "@/components/NotificationsBell";
 import { getNavigationForRole } from "@/config/navigation";
 
 const scrollToLeaderboard = () => {
@@ -67,7 +67,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-2">
           {user ? (
             <>
-              <NotificationsBell />
+              {/* <NotificationsBell /> */}
               <Link
                 to="/profile"
                 className="flex items-center gap-2 bg-primary/5 rounded-full px-4 py-1.5 hover:bg-primary/10 transition-colors"

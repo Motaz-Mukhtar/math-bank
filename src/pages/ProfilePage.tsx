@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile } from "@/services/auth.api";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import BadgesDisplay from "@/components/BadgesDisplay";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -191,11 +190,6 @@ const ProfilePage = () => {
               </Button>
             </CardContent>
           </Card>
-
-          {/* Badges */}
-          {user.role === "STUDENT" && user.profile && (
-            <BadgesDisplay studentProfileId={user.profile.id} />
-          )}
         </div>
       </main>
       <Footer />

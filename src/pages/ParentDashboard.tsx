@@ -5,7 +5,6 @@ import { linkChild, getChildren, type Child } from "@/services/parent.api";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StudentPointsChart from "@/components/StudentPointsChart";
-import BadgesDisplay from "@/components/BadgesDisplay";
 import StudentQuizHistory from "@/components/StudentQuizHistory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -233,7 +232,6 @@ const ParentDashboard = () => {
                         </div>
 
                         <div className="mt-4 space-y-3">
-                          <BadgesDisplay studentProfileId={student.childId} compact />
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-muted-foreground">النقاط</span>
