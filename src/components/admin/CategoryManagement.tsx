@@ -20,10 +20,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Pencil, Trash2, FolderOpen } from "lucide-react";
+import { Loader2, Pencil, Trash2, FolderOpen, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   getCategories,
+  createVideoCategory,
   updateVideoCategory,
   deleteVideoCategory,
   type VideoCategory,
@@ -34,6 +35,7 @@ export const CategoryManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editingCategory, setEditingCategory] = useState<VideoCategory | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<VideoCategory | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Edit form state
@@ -65,9 +67,14 @@ export const CategoryManagement = () => {
     setEditSortOrder(category.sortOrder.toString());
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingCategory) return;
+  const handleCreate = () => {
+    setIsCreating(true);
+    setEditName("");
+    setEditDescription("");
+    setEditSortOrder((categories.length + 1).toString());
+  };
 
+  const handleSaveEdit = async () => {
     if (!editName.trim()) {
       toast.error("اسم الفصل مطلوب");
       return;
@@ -81,21 +88,35 @@ export const CategoryManagement = () => {
 
     setSaving(true);
     try {
-      await updateVideoCategory(editingCategory.id, {
-        name: editName.trim(),
-        description: editDescription.trim() || undefined,
-        sortOrder,
-      });
-
-      toast.success("تم تحديث الفصل بنجاح");
-      setEditingCategory(null);
+      if (isCreating) {
+        await createVideoCategory({
+          name: editName.trim(),
+          description: editDescription.trim() || undefined,
+          sortOrder,
+        });
+        toast.success("تم إضافة الفصل بنجاح");
+        setIsCreating(false);
+      } else if (editingCategory) {
+        await updateVideoCategory(editingCategory.id, {
+          name: editName.trim(),
+          description: editDescription.trim() || undefined,
+          sortOrder,
+        });
+        toast.success("تم تحديث الفصل بنجاح");
+        setEditingCategory(null);
+      }
       await fetchCategories();
     } catch (error: any) {
-      console.error("Failed to update category:", error);
-      toast.error(error.response?.data?.error || "فشل تحديث الفصل");
+      console.error("Failed to save category:", error);
+      toast.error(error.response?.data?.error || "فشل حفظ الفصل");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCloseDialog = () => {
+    setEditingCategory(null);
+    setIsCreating(false);
   };
 
   const handleDelete = async () => {
@@ -129,10 +150,16 @@ export const CategoryManagement = () => {
     <>
       <Card className="shadow-md">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FolderOpen className="w-5 h-5 text-primary" />
-            إدارة الفصول ({categories.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-primary" />
+              إدارة الفصول ({categories.length})
+            </CardTitle>
+            <Button onClick={handleCreate} className="gap-2 font-cairo">
+              <Plus className="w-4 h-4" />
+              إضافة فصل
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {categories.length === 0 ? (
@@ -199,13 +226,13 @@ export const CategoryManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
+      {/* Edit/Create Dialog */}
+      <Dialog open={!!editingCategory || isCreating} onOpenChange={handleCloseDialog}>
         <DialogContent className="font-cairo" dir="rtl">
           <DialogHeader>
-            <DialogTitle>تعديل الفصل</DialogTitle>
+            <DialogTitle>{isCreating ? "إضافة فصل جديد" : "تعديل الفصل"}</DialogTitle>
             <DialogDescription>
-              قم بتعديل معلومات الفصل
+              {isCreating ? "أدخل معلومات الفصل الجديد" : "قم بتعديل معلومات الفصل"}
             </DialogDescription>
           </DialogHeader>
 
@@ -243,7 +270,7 @@ export const CategoryManagement = () => {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setEditingCategory(null)}
+              onClick={handleCloseDialog}
               disabled={saving}
             >
               إلغاء
@@ -251,6 +278,8 @@ export const CategoryManagement = () => {
             <Button onClick={handleSaveEdit} disabled={saving}>
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isCreating ? (
+                "إضافة الفصل"
               ) : (
                 "حفظ التغييرات"
               )}

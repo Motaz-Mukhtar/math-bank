@@ -27,11 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Pencil, Trash2, Video, ExternalLink, MoveRight } from "lucide-react";
+import { Loader2, Pencil, Trash2, Video, ExternalLink, MoveRight, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   getVideos,
   getCategories,
+  createVideo,
   updateVideo,
   deleteVideo,
   moveVideo,
@@ -46,6 +47,7 @@ export const VideoManagement = () => {
   const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
   const [deletingVideo, setDeletingVideo] = useState<VideoType | null>(null);
   const [movingVideo, setMovingVideo] = useState<VideoType | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Edit form state
@@ -88,9 +90,20 @@ export const VideoManagement = () => {
     setEditSortOrder(video.sortOrder.toString());
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingVideo) return;
+  const handleCreate = () => {
+    if (categories.length === 0) {
+      toast.error("يجب إضافة فصل واحد على الأقل أولاً");
+      return;
+    }
+    setIsCreating(true);
+    setEditTitle("");
+    setEditDescription("");
+    setEditUrl("");
+    setEditCategoryId(categories[0]?.id || "");
+    setEditSortOrder("1");
+  };
 
+  const handleSaveEdit = async () => {
     if (!editTitle.trim()) {
       toast.error("عنوان الفيديو مطلوب");
       return;
@@ -98,6 +111,11 @@ export const VideoManagement = () => {
 
     if (!editUrl.trim()) {
       toast.error("رابط الفيديو مطلوب");
+      return;
+    }
+
+    if (!editCategoryId) {
+      toast.error("يجب اختيار الفصل");
       return;
     }
 
@@ -109,23 +127,39 @@ export const VideoManagement = () => {
 
     setSaving(true);
     try {
-      await updateVideo(editingVideo.id, {
-        title: editTitle.trim(),
-        description: editDescription.trim() || undefined,
-        url: editUrl.trim(),
-        categoryId: editCategoryId,
-        sortOrder,
-      });
-
-      toast.success("تم تحديث الفيديو بنجاح");
-      setEditingVideo(null);
+      if (isCreating) {
+        await createVideo({
+          title: editTitle.trim(),
+          description: editDescription.trim() || undefined,
+          url: editUrl.trim(),
+          categoryId: editCategoryId,
+          sortOrder,
+        });
+        toast.success("تم إضافة الفيديو بنجاح");
+        setIsCreating(false);
+      } else if (editingVideo) {
+        await updateVideo(editingVideo.id, {
+          title: editTitle.trim(),
+          description: editDescription.trim() || undefined,
+          url: editUrl.trim(),
+          categoryId: editCategoryId,
+          sortOrder,
+        });
+        toast.success("تم تحديث الفيديو بنجاح");
+        setEditingVideo(null);
+      }
       await fetchData();
     } catch (error: any) {
-      console.error("Failed to update video:", error);
-      toast.error(error.response?.data?.error || "فشل تحديث الفيديو");
+      console.error("Failed to save video:", error);
+      toast.error(error.response?.data?.error || "فشل حفظ الفيديو");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCloseDialog = () => {
+    setEditingVideo(null);
+    setIsCreating(false);
   };
 
   const handleDelete = async () => {
@@ -195,10 +229,16 @@ export const VideoManagement = () => {
     <>
       <Card className="shadow-md">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Video className="w-5 h-5 text-primary" />
-            إدارة الفيديوهات ({videos.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Video className="w-5 h-5 text-primary" />
+              إدارة الفيديوهات ({videos.length})
+            </CardTitle>
+            <Button onClick={handleCreate} className="gap-2 font-cairo">
+              <Plus className="w-4 h-4" />
+              إضافة فيديو
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {videos.length === 0 ? (
@@ -275,13 +315,13 @@ export const VideoManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingVideo} onOpenChange={() => setEditingVideo(null)}>
+      {/* Edit/Create Dialog */}
+      <Dialog open={!!editingVideo || isCreating} onOpenChange={handleCloseDialog}>
         <DialogContent className="font-cairo" dir="rtl">
           <DialogHeader>
-            <DialogTitle>تعديل الفيديو</DialogTitle>
+            <DialogTitle>{isCreating ? "إضافة فيديو جديد" : "تعديل الفيديو"}</DialogTitle>
             <DialogDescription>
-              قم بتعديل معلومات الفيديو
+              {isCreating ? "أدخل معلومات الفيديو الجديد" : "قم بتعديل معلومات الفيديو"}
             </DialogDescription>
           </DialogHeader>
 
@@ -345,7 +385,7 @@ export const VideoManagement = () => {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setEditingVideo(null)}
+              onClick={handleCloseDialog}
               disabled={saving}
             >
               إلغاء
@@ -353,6 +393,8 @@ export const VideoManagement = () => {
             <Button onClick={handleSaveEdit} disabled={saving}>
               {saving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isCreating ? (
+                "إضافة الفيديو"
               ) : (
                 "حفظ التغييرات"
               )}

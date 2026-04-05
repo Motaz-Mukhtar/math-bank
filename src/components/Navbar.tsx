@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, Calculator, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import NotificationsBell from "@/components/NotificationsBell";
+import { getNavigationForRole } from "@/config/navigation";
 
 const scrollToLeaderboard = () => {
   setTimeout(() => {
@@ -27,15 +28,7 @@ const Navbar = () => {
     }
   };
 
-  const links = [
-    { label: "الرئيسية",    href: "/",            isLeaderboard: false },
-    { label: "الفيديوهات",  href: "/videos",       isLeaderboard: false },
-    { label: "الاختبارات",  href: "/quizzes",      isLeaderboard: false },
-    { label: "العجلة",      href: "/wheel",        isLeaderboard: false },
-    { label: "الترتيب",     href: "/#leaderboard", isLeaderboard: true  },
-    ...(user?.role === "PARENT" ? [{ label: "لوحة التحكم",  href: "/parent-dashboard", isLeaderboard: false }] : []),
-    ...(user?.role === "ADMIN"  ? [{ label: "إدارة النظام", href: "/admin",             isLeaderboard: false }] : []),
-  ];
+  const links = getNavigationForRole(user?.role);
 
   return (
     <nav className="fixed top-0 right-0 left-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">

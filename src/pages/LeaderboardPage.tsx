@@ -63,6 +63,7 @@ const LeaderboardPage = () => {
         setError(null);
 
         const data = await getFullLeaderboard(p, 20, per);
+        console.log(data);
         setEntries((prev) => (append ? [...prev, ...data.entries] : data.entries));
         setHasMore(data.meta.page < data.meta.totalPages);
         setLastUpdated(new Date());
@@ -225,7 +226,7 @@ const LeaderboardPage = () => {
           )}
 
           {/* Empty weekly state */}
-          {!loading && !error && period === 'weekly' && entries.length === 0 && (
+          {!loading && !error && period === 'weekly' && entries.length < 3 && (
             <div className="text-center space-y-4 py-12 animate-in fade-in duration-500">
               <div className="w-24 h-24 mx-auto bg-muted/50 rounded-full flex items-center justify-center">
                 <MailOpen className="w-12 h-12 text-muted-foreground" />
@@ -235,26 +236,30 @@ const LeaderboardPage = () => {
                   لا يوجد نشاط هذا الأسبوع بعد
                 </p>
                 <p className="font-cairo text-muted-foreground text-sm max-w-md mx-auto">
-                  الأسبوع يبدأ من يوم السبت. كن أول من يتصدر القائمة هذا الأسبوع!
+                  {user?.role === 'STUDENT' 
+                    ? 'الأسبوع يبدأ من يوم السبت. كن أول من يتصدر القائمة هذا الأسبوع!'
+                    : 'الأسبوع يبدأ من يوم السبت. لا يوجد طلاب نشطون هذا الأسبوع بعد.'}
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-                <Button
-                  onClick={() => navigate('/quizzes')}
-                  className="font-cairo font-bold gap-2"
-                >
-                  <Zap className="w-4 h-4" />
-                  ابدأ اختبار
-                </Button>
-                <Button
-                  onClick={() => navigate('/wheel')}
-                  variant="outline"
-                  className="font-cairo font-bold gap-2"
-                >
-                  <Target className="w-4 h-4" />
-                  جرب عجلة الحظ
-                </Button>
-              </div>
+              {user?.role === 'STUDENT' && (
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                  <Button
+                    onClick={() => navigate('/quizzes')}
+                    className="font-cairo font-bold gap-2"
+                  >
+                    <Zap className="w-4 h-4" />
+                    ابدأ اختبار
+                  </Button>
+                  <Button
+                    onClick={() => navigate('/wheel')}
+                    variant="outline"
+                    className="font-cairo font-bold gap-2"
+                  >
+                    <Target className="w-4 h-4" />
+                    جرب عجلة الحظ
+                  </Button>
+                </div>
+              )}
               <div className="pt-4">
                 <Button
                   onClick={() => handlePeriodChange('all')}

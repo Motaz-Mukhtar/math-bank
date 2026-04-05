@@ -118,9 +118,9 @@ const StudentQuizHistory = ({ studentProfileId, studentName }: Props) => {
               <topic.icon className="w-5 h-5 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-cairo font-semibold text-sm text-foreground truncate">{topic.label}</span>
+                  <span className="font-cairo font-semibold text-sm text-foreground truncate">{topicLabels[`${topic?.label?.toLocaleLowerCase()}`]?.label}</span>
                   <span className={`font-cairo text-[10px] font-bold px-1.5 py-0.5 rounded-full ${diff.bg} ${diff.color}`}>
-                    {diff.label}
+                    {difficultyLabels[`${diff?.label?.toLocaleLowerCase()}`]?.label} {/**EASY */}
                   </span>
                 </div>
                 <p className="text-[10px] text-muted-foreground font-cairo">

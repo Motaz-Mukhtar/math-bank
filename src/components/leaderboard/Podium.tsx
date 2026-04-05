@@ -6,21 +6,21 @@ interface PodiumProps {
 }
 
 const PLACE_CONFIG = [
-  // 2nd — left
-  {
-    avatarSize: 'w-14 h-14',
-    barHeight: 'h-14',
-    bgClass: 'gradient-hero',
-    label: '🥈',
-  },
-  // 1st — center (elevated)
+  // Index 0: 1st place — center (elevated)
   {
     avatarSize: 'w-[72px] h-[72px]',
     barHeight: 'h-20',
     bgClass: 'gradient-warm',
     label: '🥇',
   },
-  // 3rd — right
+  // Index 1: 2nd place — left
+  {
+    avatarSize: 'w-14 h-14',
+    barHeight: 'h-14',
+    bgClass: 'gradient-hero',
+    label: '🥈',
+  },
+  // Index 2: 3rd place — right
   {
     avatarSize: 'w-14 h-14',
     barHeight: 'h-10',
@@ -29,7 +29,7 @@ const PLACE_CONFIG = [
   },
 ];
 
-// Display order: 2nd, 1st, 3rd
+// Display order: 2nd, 1st, 3rd (indices into topThree array)
 const DISPLAY_ORDER = [1, 0, 2];
 
 export const Podium = ({ topThree, currentUserId }: PodiumProps) => {
@@ -43,7 +43,7 @@ export const Podium = ({ topThree, currentUserId }: PodiumProps) => {
 
   return (
     <div className="flex justify-center items-end gap-3 mb-10 animate-reveal-up stagger-2">
-      {DISPLAY_ORDER.map((rankIdx) => {
+      {DISPLAY_ORDER.map((rankIdx, displayPos) => {
         const student = topThree[rankIdx];
         if (!student) return null;
         const cfg = PLACE_CONFIG[rankIdx];
@@ -54,7 +54,7 @@ export const Podium = ({ topThree, currentUserId }: PodiumProps) => {
             <span className="text-lg">{cfg.label}</span>
             <div
               className={`${cfg.avatarSize} rounded-full ${cfg.bgClass} text-white flex items-center justify-center font-cairo font-extrabold text-xl shadow-md transition-transform duration-200
-                ${rankIdx === 0 ? 'scale-110' : ''}
+                ${displayPos === 1 ? 'scale-110' : ''}
                 ${isMe ? 'ring-4 ring-primary/60' : ''}`}
             >
               {student.fullName.charAt(0)}

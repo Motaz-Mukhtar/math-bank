@@ -46,13 +46,16 @@ const Leaderboard = () => {
 
         {/* Top 3 podium */}
         <div className="flex justify-center items-end gap-4 mb-10 animate-reveal-up stagger-2">
-          {[1, 0, 2].map((rank) => {
+          {[1, 0, 2].map((rank, displayPos) => {
             const s = students[rank];
             const isFirst = rank === 0;
+            // rankStyles: [1st, 2nd, 3rd] but we display [2nd, 1st, 3rd]
+            // So we need styles [1, 0, 2] for display positions [0, 1, 2]
+            const styleIdx = rank;
             return (
               <div key={s?.id} className="flex flex-col items-center">
                 <div
-                  className={`w-16 h-16 md:w-20 md:h-20 rounded-full ${rankStyles[rank]} flex items-center justify-center font-cairo font-extrabold text-xl md:text-2xl shadow-md ${isFirst ? "ring-4 ring-secondary/30 scale-110" : ""}`}
+                  className={`w-16 h-16 md:w-20 md:h-20 rounded-full ${rankStyles[styleIdx]} flex items-center justify-center font-cairo font-extrabold text-xl md:text-2xl shadow-md ${isFirst ? "ring-4 ring-secondary/30 scale-110" : ""}`}
                 >
                   {s?.fullName.charAt(0)}
                 </div>

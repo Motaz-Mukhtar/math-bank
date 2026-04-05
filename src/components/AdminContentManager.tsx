@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,9 @@ import { QuestionFormContainer } from "@/components/admin/QuestionFormContainer"
 import { QuestionList } from "@/components/admin/QuestionList";
 
 const AdminContentManager = () => {
+  // Ref for scrolling to form
+  const formContainerRef = useRef<HTMLDivElement>(null);
+
   // Video categories list
   const [categories, setCategories] = useState<VideoCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -70,6 +73,14 @@ const AdminContentManager = () => {
 
   const handleQuestionEdit = (questionId: string) => {
     setEditingQuestionId(questionId);
+    
+    // Scroll to the form after a short delay to ensure state is updated
+    setTimeout(() => {
+      formContainerRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
   };
 
   const handleQuestionCancel = () => {
@@ -188,11 +199,13 @@ const AdminContentManager = () => {
 
           {/* Add Question Tab */}
           <TabsContent value="question" className="space-y-4 mt-4">
-            <QuestionFormContainer
-              questionId={editingQuestionId}
-              onSuccess={handleQuestionSuccess}
-              onCancel={editingQuestionId ? handleQuestionCancel : undefined}
-            />
+            <div ref={formContainerRef}>
+              <QuestionFormContainer
+                questionId={editingQuestionId}
+                onSuccess={handleQuestionSuccess}
+                onCancel={editingQuestionId ? handleQuestionCancel : undefined}
+              />
+            </div>
             
             <div className="pt-6 border-t">
               <QuestionList

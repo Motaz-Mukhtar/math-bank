@@ -1,29 +1,20 @@
 import apiClient from '@/lib/api';
 import { ApiResponse } from '@/types';
-import { QuizCategory, QuizLevel } from './quiz.api';
 
-export interface LinkChildResponse {
+export interface ChildInfo {
   childId: string;
   fullName: string;
   email: string;
-  academicNumber: string | null;
-  message: string;
-}
-
-export interface Child {
-  childId: string;
-  fullName: string;
-  email: string;
-  academicNumber: string | null;
+  academicNumber: string;
   points: number;
   rank: number | null;
   linkedAt: string;
 }
 
-export interface ChildQuizHistory {
+export interface QuizHistoryItem {
   sessionId: string;
-  category: QuizCategory;
-  level: QuizLevel;
+  category: string;
+  level: string;
   totalScore: number;
   correctCount: number;
   incorrectCount: number;
@@ -31,41 +22,48 @@ export interface ChildQuizHistory {
   completedAt: string;
 }
 
+export interface PointsHistoryItem {
+  date: string;
+  total: number;
+}
+
 export interface ChildProgress {
   child: {
     id: string;
     fullName: string;
     email: string;
-    academicNumber: string | null;
+    academicNumber: string;
     points: number;
     rank: number | null;
   };
-  quizHistory: ChildQuizHistory[];
+  quizHistory: QuizHistoryItem[];
+  pointsHistory: PointsHistoryItem[];
+}
+
+export interface LinkChildDto {
+  academicNumber: string;
 }
 
 /**
- * Link a child to parent account by academic number
+ * Link a child to parent account
  * POST /api/v1/parent/link
  */
-export const linkChild = async (academicNumber: string): Promise<LinkChildResponse> => {
-  const response = await apiClient.post<ApiResponse<LinkChildResponse>>(
-    '/parent/link',
-    { academicNumber }
-  );
+export const linkChild = async (data: LinkChildDto): Promise<any> => {
+  const response = await apiClient.post<ApiResponse<any>>('/parent/link', data);
   return response.data.data;
 };
 
 /**
- * Get all children linked to parent account
+ * Get all children linked to parent
  * GET /api/v1/parent/children
  */
-export const getChildren = async (): Promise<Child[]> => {
-  const response = await apiClient.get<ApiResponse<Child[]>>('/parent/children');
+export const getChildren = async (): Promise<ChildInfo[]> => {
+  const response = await apiClient.get<ApiResponse<ChildInfo[]>>('/parent/children');
   return response.data.data;
 };
 
 /**
- * Get detailed progress for a specific child
+ * Get child's progress details including quiz history and points history
  * GET /api/v1/parent/children/:id/progress
  */
 export const getChildProgress = async (childId: string): Promise<ChildProgress> => {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { TrendingUp } from "lucide-react";
+import { getChildProgress } from "@/services/parent.api";
 
 interface PointsEntry {
   date: string;
@@ -21,25 +21,27 @@ const StudentPointsChart = ({ studentProfileId, studentName }: StudentPointsChar
   useEffect(() => {
     const fetchHistory = async () => {
       setLoading(true);
-      const { data: history } = await supabase
-        .from("points_history")
-        .select("points, created_at")
-        .eq("student_profile_id", studentProfileId)
-        .order("created_at", { ascending: true });
-
-      if (history && history.length > 0) {
-        const mapped: PointsEntry[] = history.map((h: any) => ({
-          date: new Date(h.created_at).toLocaleDateString("ar-SA", {
-            month: "short",
-            day: "numeric",
-          }),
-          points: h.points,
-        }));
-        setData(mapped);
-      } else {
+      try {
+        const progress = await getChildProgress(studentProfileId);
+        
+        if (progress.pointsHistory && progress.pointsHistory.length > 0) {
+          const mapped: PointsEntry[] = progress.pointsHistory.map((h) => ({
+            date: new Date(h.date).toLocaleDateString("ar-SA", {
+              month: "short",
+              day: "numeric",
+            }),
+            points: h.total,
+          }));
+          setData(mapped);
+        } else {
+          setData([]);
+        }
+      } catch (error) {
+        console.error("Error fetching points history:", error);
         setData([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchHistory();
