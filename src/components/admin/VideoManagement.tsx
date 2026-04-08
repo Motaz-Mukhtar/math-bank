@@ -293,20 +293,20 @@ export const VideoManagement = () => {
   return (
     <>
       <Card className="shadow-md">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 px-4 sm:px-6">
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Video className="w-5 h-5 text-primary" />
                 إدارة الفيديوهات ({displayCount})
               </CardTitle>
-              <Button onClick={handleCreate} className="gap-2 font-cairo">
+              <Button onClick={handleCreate} className="gap-2 font-cairo w-full sm:w-auto">
                 <Plus className="w-4 h-4" />
                 إضافة فيديو
               </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="بحث بالعنوان أو الوصف..."
@@ -316,27 +316,29 @@ export const VideoManagement = () => {
                   className="pr-10 font-cairo text-sm h-9"
                 />
               </div>
-              <Button
-                onClick={handleSearch}
-                variant="secondary"
-                className="gap-2 font-cairo h-9"
-                disabled={loading}
-              >
-                <Search className="w-4 h-4" />
-                بحث
-              </Button>
-              {activeSearch && (
+              <div className="flex items-center gap-2">
                 <Button
-                  onClick={handleClearSearch}
-                  variant="outline"
-                  className="font-cairo h-9"
+                  onClick={handleSearch}
+                  variant="secondary"
+                  className="gap-2 font-cairo h-9 flex-1 sm:flex-none"
                   disabled={loading}
                 >
-                  مسح البحث
+                  <Search className="w-4 h-4" />
+                  بحث
                 </Button>
-              )}
+                {activeSearch && (
+                  <Button
+                    onClick={handleClearSearch}
+                    variant="outline"
+                    className="font-cairo h-9 flex-1 sm:flex-none whitespace-nowrap"
+                    disabled={loading}
+                  >
+                    مسح البحث
+                  </Button>
+                )}
+              </div>
               <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
-                <SelectTrigger className="w-48 font-cairo text-sm h-9">
+                <SelectTrigger className="w-full sm:w-48 font-cairo text-sm h-9">
                   <SelectValue placeholder="جميع الفصول" />
                 </SelectTrigger>
                 <SelectContent className="font-cairo">
@@ -351,14 +353,14 @@ export const VideoManagement = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {filteredVideos?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {activeSearch || categoryFilter !== "ALL" ? "لا توجد نتائج للبحث" : "لا توجد فيديوهات"}
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -426,11 +428,11 @@ export const VideoManagement = () => {
 
               {/* Pagination Controls */}
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-muted-foreground font-cairo">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+                  <div className="text-sm text-muted-foreground font-cairo order-2 sm:order-1">
                     صفحة {pagination.page} من {pagination.totalPages} — {pagination.total} فيديو
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-center order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -441,20 +443,22 @@ export const VideoManagement = () => {
                       <ChevronRight className="w-4 h-4" />
                       السابق
                     </Button>
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                      const pageNum = i + 1;
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant={pagination.page === pageNum ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handlePageChange(pageNum)}
-                          className="w-8 h-8 p-0"
-                        >
-                          {pageNum}
-                        </Button>
-                      );
-                    })}
+                    <div className="hidden sm:flex items-center gap-2">
+                      {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                        const pageNum = i + 1;
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={pagination.page === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"

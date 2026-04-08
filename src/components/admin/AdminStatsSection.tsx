@@ -10,9 +10,11 @@ interface AdminStatsSectionProps {
 }
 
 const AdminStatsSection = ({ stats }: AdminStatsSectionProps) => (
-  <div className="grid grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+  <div className="grid grid-cols-3 gap-4 animate-in fade-in
+                  slide-in-from-bottom-4 duration-500 delay-100 max-sm:grid-cols-1">
     <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="flex items-center gap-3 p-5">
+      <CardContent className="flex items-center gap-3 p-5 max-md:flex-col
+                              max-sm:justify-center max-md:text-center">
         <div className="rounded-xl bg-primary/10 p-3">
           <Users className="w-5 h-5 text-primary" />
         </div>
@@ -23,7 +25,8 @@ const AdminStatsSection = ({ stats }: AdminStatsSectionProps) => (
       </CardContent>
     </Card>
     <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="flex items-center gap-3 p-5">
+      <CardContent className="flex items-center gap-3 p-5 max-md:flex-col
+                              max-sm:justify-center max-md:text-center">
         <div className="rounded-xl bg-secondary/10 p-3">
           <GraduationCap className="w-5 h-5 text-secondary" />
         </div>
@@ -34,7 +37,8 @@ const AdminStatsSection = ({ stats }: AdminStatsSectionProps) => (
       </CardContent>
     </Card>
     <Card className="shadow-md hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="flex items-center gap-3 p-5">
+      <CardContent className="flex items-center gap-3 p-5 max-md:flex-col
+                              max-sm:justify-center max-md:text-center">
         <div className="rounded-xl bg-accent/30 p-3">
           <UserCheck className="w-5 h-5 text-foreground" />
         </div>

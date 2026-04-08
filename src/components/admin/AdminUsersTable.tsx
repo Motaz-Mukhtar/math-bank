@@ -106,9 +106,9 @@ const AdminUsersTable = ({ currentUserId, onEdit, onDelete }: AdminUsersTablePro
               </span>
             )}
           </CardTitle>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap max-md:justify-center max-md:gap-8 ">
             <Select value={roleFilter} onValueChange={handleRoleChange}>
-              <SelectTrigger className="w-36 font-cairo text-sm h-9">
+              <SelectTrigger className="w-36 font-cairo text-sm h-9 max-md:w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="font-cairo">
@@ -117,17 +117,18 @@ const AdminUsersTable = ({ currentUserId, onEdit, onDelete }: AdminUsersTablePro
                 <SelectItem value="PARENT">أولياء أمور</SelectItem>
               </SelectContent>
             </Select>
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative max-md:w-full">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2
+                                 w-4 h-4 text-muted-foreground"/>
               <Input
                 placeholder="بحث بالاسم أو البريد..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="pr-10 font-cairo text-sm w-52 h-9"
+                className="pr-10 font-cairo text-sm w-52 h-9 max-md:w-full"
               />
             </div>
-            <Button size="sm" variant="outline" onClick={handleSearch} className="font-cairo h-9">
+            <Button size="sm" variant="outline" onClick={handleSearch} className="font-cairo h-9 max-md:w-full">
               بحث
             </Button>
           </div>

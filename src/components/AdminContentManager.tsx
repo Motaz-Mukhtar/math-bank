@@ -34,15 +34,15 @@ const AdminContentManager = () => {
   };
 
   return (
-    <Card className="shadow-md">
-      <CardHeader className="pb-3">
+    <Card className="shadow-md overflow-hidden">
+      <CardHeader className="pb-3 px-4 sm:px-6">
         <CardTitle className="text-lg flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-primary" />
           إدارة الأسئلة
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div ref={formContainerRef}>
+      <CardContent className="space-y-4 px-4 sm:px-6">
+        <div ref={formContainerRef} className="w-full">
           <QuestionFormContainer
             questionId={editingQuestionId}
             onSuccess={handleQuestionSuccess}
@@ -50,7 +50,7 @@ const AdminContentManager = () => {
           />
         </div>
         
-        <div className="pt-6 border-t">
+        <div className="pt-6 border-t w-full">
           <QuestionList
             key={refreshQuestionList}
             onEdit={handleQuestionEdit}

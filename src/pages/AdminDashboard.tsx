@@ -114,7 +114,7 @@ const AdminDashboard = () => {
     <>
       <Navbar />
       <main className="min-h-screen bg-background pt-24 pb-16 font-cairo" dir="rtl">
-        <div className="container max-w-6xl space-y-6">
+        <div className="container max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
 
           {/* Header */}
           <div className="space-y-2 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -126,12 +126,14 @@ const AdminDashboard = () => {
           </div>
 
           {/* Section Nav */}
-          <div className="flex gap-2 flex-wrap animate-in fade-in slide-in-from-top-2 duration-500 delay-75 border-b border-border pb-4">
+          <div className="flex gap-2 flex-wrap animate-in fade-in slide-in-from-top-2
+                          duration-500 delay-75 border-b border-border pb-4 max-sm:justify-center">
             {navItems.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveSection(id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold font-cairo transition-all duration-200 active:scale-95 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold
+                            font-cairo transition-all duration-200 active:scale-95 ${
                   activeSection === id
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                     : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-muted/50"

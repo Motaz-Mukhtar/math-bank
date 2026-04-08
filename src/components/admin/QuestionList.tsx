@@ -7,7 +7,6 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/api';
 import { toast } from 'sonner';
@@ -115,20 +114,19 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
     text.length <= max ? text : text.substring(0, max) + '...';
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <CardTitle className="font-cairo">
-            قائمة الأسئلة
-            {!isLoading && (
-              <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full mr-2">
-                {total}
-              </span>
-            )}
-          </CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h3 className="font-cairo text-lg font-semibold">
+          قائمة الأسئلة
+          {!isLoading && (
+            <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full mr-2">
+              {total}
+            </span>
+          )}
+        </h3>
+      </div>
+      
+      <div className="space-y-4">
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="space-y-1.5">
@@ -294,7 +292,7 @@ export function QuestionList({ onEdit, onDelete }: QuestionListProps) {
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

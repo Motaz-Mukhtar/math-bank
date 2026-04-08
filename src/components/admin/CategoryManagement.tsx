@@ -185,57 +185,59 @@ export const CategoryManagement = () => {
   return (
     <>
       <Card className="shadow-md">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-4">
+        <CardHeader className="pb-3 px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <FolderOpen className="w-5 h-5 text-primary" />
               إدارة الفصول ({displayCount})
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none sm:w-52">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="بحث بالاسم أو الوصف..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleSearchKeyPress}
-                  className="pr-10 font-cairo text-sm w-52 h-9"
+                  className="pr-10 font-cairo text-sm h-9"
                 />
               </div>
-              <Button
-                onClick={handleSearch}
-                variant="secondary"
-                className="gap-2 font-cairo h-9"
-                disabled={loading}
-              >
-                <Search className="w-4 h-4" />
-                بحث
-              </Button>
-              {activeSearch && (
+              <div className="flex items-center gap-2">
                 <Button
-                  onClick={handleClearSearch}
-                  variant="outline"
-                  className="font-cairo h-9"
+                  onClick={handleSearch}
+                  variant="secondary"
+                  className="gap-2 font-cairo h-9 flex-1 sm:flex-none"
                   disabled={loading}
                 >
-                  مسح البحث
+                  <Search className="w-4 h-4" />
+                  بحث
                 </Button>
-              )}
-              <Button onClick={handleCreate} className="gap-2 font-cairo">
-                <Plus className="w-4 h-4" />
-                إضافة فصل
-              </Button>
+                {activeSearch && (
+                  <Button
+                    onClick={handleClearSearch}
+                    variant="outline"
+                    className="font-cairo h-9 flex-1 sm:flex-none whitespace-nowrap"
+                    disabled={loading}
+                  >
+                    مسح البحث
+                  </Button>
+                )}
+                <Button onClick={handleCreate} className="gap-2 font-cairo flex-1 sm:flex-none whitespace-nowrap">
+                  <Plus className="w-4 h-4" />
+                  إضافة فصل
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {filteredCategories?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {activeSearch ? "لا توجد نتائج للبحث" : "لا توجد فصول"}
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -293,11 +295,11 @@ export const CategoryManagement = () => {
 
               {/* Pagination Controls */}
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-muted-foreground font-cairo">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+                  <div className="text-sm text-muted-foreground font-cairo order-2 sm:order-1">
                     صفحة {pagination.page} من {pagination.totalPages} — {pagination.total} فصل
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap justify-center order-1 sm:order-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -308,20 +310,22 @@ export const CategoryManagement = () => {
                       <ChevronRight className="w-4 h-4" />
                       السابق
                     </Button>
-                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                      const pageNum = i + 1;
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant={pagination.page === pageNum ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handlePageChange(pageNum)}
-                          className="w-8 h-8 p-0"
-                        >
-                          {pageNum}
-                        </Button>
-                      );
-                    })}
+                    <div className="hidden sm:flex items-center gap-2">
+                      {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                        const pageNum = i + 1;
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={pagination.page === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
