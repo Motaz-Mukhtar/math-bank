@@ -27,25 +27,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Pencil, Trash2, Video, ExternalLink, MoveRight, Plus, Search } from "lucide-react";
+import { Loader2, Pencil, Trash2, Video, ExternalLink, MoveRight, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   getVideos,
-  getCategories,
+  getAllCategoriesNoPagination,
   createVideo,
   updateVideo,
   deleteVideo,
   moveVideo,
   type Video as VideoType,
   type VideoCategory,
+  type PaginationMeta,
 } from "@/services/video.api";
 
 export const VideoManagement = () => {
   const [videos, setVideos] = useState<VideoType[]>([]);
-  const [filteredVideos, setFilteredVideos] = useState<VideoType[]>([]);
   const [categories, setCategories] = useState<VideoCategory[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearch, setActiveSearch] = useState(""); // The search term being used in API
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
   const [editingVideo, setEditingVideo] = useState<VideoType | null>(null);
   const [deletingVideo, setDeletingVideo] = useState<VideoType | null>(null);
@@ -64,46 +72,74 @@ export const VideoManagement = () => {
   const [moveTargetCategoryId, setMoveTargetCategoryId] = useState("");
 
   useEffect(() => {
-    fetchData();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
-    // Filter videos based on search query and category
-    let filtered = videos;
+    fetchVideos();
+  }, [currentPage, categoryFilter, activeSearch]);
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (video) =>
-          video.title.toLowerCase().includes(query) ||
-          video.description?.toLowerCase().includes(query) ||
-          getCategoryName(video.categoryId).toLowerCase().includes(query)
-      );
+  const fetchCategories = async () => {
+    try {
+      const categoriesData = await getAllCategoriesNoPagination();
+      setCategories(categoriesData.categories);
+    } catch (error: any) {
+      console.error("Failed to fetch categories:", error);
+      toast.error("فشل تحميل الفصول");
     }
+  };
 
-    if (categoryFilter !== "ALL") {
-      filtered = filtered.filter((video) => video.categoryId === categoryFilter);
-    }
-
-    setFilteredVideos(filtered);
-  }, [searchQuery, categoryFilter, videos]);
-
-  const fetchData = async () => {
+  const fetchVideos = async () => {
     try {
       setLoading(true);
-      const [videosData, categoriesData] = await Promise.all([
-        getVideos(),
-        getCategories(),
-      ]);
-      setVideos(videosData);
-      setCategories(categoriesData);
+      const response = await getVideos(
+        currentPage,
+        10,
+        categoryFilter !== "ALL" ? categoryFilter : undefined,
+        activeSearch || undefined
+      );
+      console.log("Videos");
+      console.log(response);
+      setVideos(response.videos);
+      setPagination(response.pagination);
     } catch (error: any) {
-      console.error("Failed to fetch data:", error);
-      toast.error("فشل تحميل البيانات");
+      console.error("Failed to fetch videos:", error);
+      toast.error("فشل تحميل الفيديوهات");
     } finally {
       setLoading(false);
     }
   };
+
+  // Helper function to get category name
+  const getCategoryName = (categoryId: string) => {
+    const category = categories?.find((c) => c.id === categoryId);
+    if (category) return category.name;
+    
+    // Fallback to video's embedded category if categories not loaded yet
+    const video = videos.find((v) => v.categoryId === categoryId);
+    return video?.category?.name || "غير معروف";
+  };
+
+  const handleSearch = () => {
+    setActiveSearch(searchQuery.trim());
+    setCurrentPage(1); // Reset to page 1 when searching
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setActiveSearch("");
+    setCurrentPage(1);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  // No need for client-side filtering anymore - backend handles it
+  const filteredVideos = videos;
+  const displayCount = pagination.total;
 
   const handleEdit = (video: VideoType) => {
     setEditingVideo(video);
@@ -172,7 +208,7 @@ export const VideoManagement = () => {
         toast.success("تم تحديث الفيديو بنجاح");
         setEditingVideo(null);
       }
-      await fetchData();
+      await fetchVideos();
     } catch (error: any) {
       console.error("Failed to save video:", error);
       toast.error(error.response?.data?.error || "فشل حفظ الفيديو");
@@ -194,7 +230,7 @@ export const VideoManagement = () => {
       await deleteVideo(deletingVideo.id);
       toast.success("تم حذف الفيديو بنجاح");
       setDeletingVideo(null);
-      await fetchData();
+      await fetchVideos();
     } catch (error: any) {
       console.error("Failed to delete video:", error);
       toast.error(error.response?.data?.error || "فشل حذف الفيديو");
@@ -226,7 +262,7 @@ export const VideoManagement = () => {
       await moveVideo(movingVideo.id, moveTargetCategoryId);
       toast.success("تم نقل الفيديو بنجاح");
       setMovingVideo(null);
-      await fetchData();
+      await fetchVideos();
     } catch (error: any) {
       console.error("Failed to move video:", error);
       toast.error(error.response?.data?.error || "فشل نقل الفيديو");
@@ -235,8 +271,13 @@ export const VideoManagement = () => {
     }
   };
 
-  const getCategoryName = (categoryId: string) => {
-    return categories.find((c) => c.id === categoryId)?.name || "غير معروف";
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleCategoryFilterChange = (value: string) => {
+    setCategoryFilter(value);
+    setCurrentPage(1); // Reset to page 1 when filter changes
   };
 
   if (loading) {
@@ -257,7 +298,7 @@ export const VideoManagement = () => {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Video className="w-5 h-5 text-primary" />
-                إدارة الفيديوهات ({filteredVideos.length})
+                إدارة الفيديوهات ({displayCount})
               </CardTitle>
               <Button onClick={handleCreate} className="gap-2 font-cairo">
                 <Plus className="w-4 h-4" />
@@ -268,19 +309,39 @@ export const VideoManagement = () => {
               <div className="relative flex-1">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="بحث بالعنوان أو الفصل..."
+                  placeholder="بحث بالعنوان أو الوصف..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
                   className="pr-10 font-cairo text-sm h-9"
                 />
               </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Button
+                onClick={handleSearch}
+                variant="secondary"
+                className="gap-2 font-cairo h-9"
+                disabled={loading}
+              >
+                <Search className="w-4 h-4" />
+                بحث
+              </Button>
+              {activeSearch && (
+                <Button
+                  onClick={handleClearSearch}
+                  variant="outline"
+                  className="font-cairo h-9"
+                  disabled={loading}
+                >
+                  مسح البحث
+                </Button>
+              )}
+              <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
                 <SelectTrigger className="w-48 font-cairo text-sm h-9">
                   <SelectValue placeholder="جميع الفصول" />
                 </SelectTrigger>
                 <SelectContent className="font-cairo">
                   <SelectItem value="ALL">جميع الفصول</SelectItem>
-                  {categories.map((cat) => (
+                  {categories?.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
                     </SelectItem>
@@ -291,76 +352,123 @@ export const VideoManagement = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredVideos.length === 0 ? (
+          {filteredVideos?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {searchQuery || categoryFilter !== "ALL" ? "لا توجد نتائج للبحث" : "لا توجد فيديوهات"}
+              {activeSearch || categoryFilter !== "ALL" ? "لا توجد نتائج للبحث" : "لا توجد فيديوهات"}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right font-cairo">العنوان</TableHead>
-                    <TableHead className="text-right font-cairo">الفصل</TableHead>
-                    <TableHead className="text-right font-cairo">الترتيب</TableHead>
-                    <TableHead className="text-right font-cairo">الرابط</TableHead>
-                    <TableHead className="text-right font-cairo">الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredVideos.map((video) => (
-                    <TableRow key={video.id}>
-                      <TableCell className="font-medium font-cairo">
-                        {video.title}
-                      </TableCell>
-                      <TableCell className="font-cairo">
-                        {getCategoryName(video.categoryId)}
-                      </TableCell>
-                      <TableCell className="font-cairo">{video.sortOrder}</TableCell>
-                      <TableCell>
-                        <a
-                          href={video.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline flex items-center gap-1"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          فتح
-                        </a>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(video)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMove(video)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoveRight className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeletingVideo(video)}
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right font-cairo">العنوان</TableHead>
+                      <TableHead className="text-right font-cairo">الفصل</TableHead>
+                      <TableHead className="text-right font-cairo">الترتيب</TableHead>
+                      <TableHead className="text-right font-cairo">الرابط</TableHead>
+                      <TableHead className="text-right font-cairo">الإجراءات</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredVideos?.map((video) => (
+                      <TableRow key={video.id}>
+                        <TableCell className="font-medium font-cairo">
+                          {video.title}
+                        </TableCell>
+                        <TableCell className="font-cairo">
+                          {getCategoryName(video.categoryId)}
+                        </TableCell>
+                        <TableCell className="font-cairo">{video.sortOrder}</TableCell>
+                        <TableCell>
+                          <a
+                            href={video.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            فتح
+                          </a>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(video)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMove(video)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoveRight className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeletingVideo(video)}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination Controls */}
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-muted-foreground font-cairo">
+                    صفحة {pagination.page} من {pagination.totalPages} — {pagination.total} فيديو
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      className="gap-1 font-cairo"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                      السابق
+                    </Button>
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pagination.page === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page === pagination.totalPages}
+                      className="gap-1 font-cairo"
+                    >
+                      التالي
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -412,7 +520,7 @@ export const VideoManagement = () => {
                   <SelectValue placeholder="اختر الفصل" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
+                  {categories?.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
                     </SelectItem>
@@ -483,7 +591,7 @@ export const VideoManagement = () => {
                   <SelectValue placeholder="اختر الفصل" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
+                  {categories?.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
                     </SelectItem>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, Calculator, LogOut, User } from "lucide-react";
+import { Menu, X, Calculator, LogOut, User, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 // import NotificationsBell from "@/components/NotificationsBell";
 import { getNavigationForRole } from "@/config/navigation";
@@ -76,6 +76,14 @@ const Navbar = () => {
                 <span className="font-cairo font-semibold text-foreground text-sm">
                   {user.fullName || "مستخدم"}
                 </span>
+                {user.role === "STUDENT" && (
+                  <div className="flex items-center gap-1 mr-2 bg-amber-500/10 rounded-full px-2 py-0.5">
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span className="font-cairo font-bold text-amber-600 text-xs">
+                      {user?.profile?.points || user?.points}
+                    </span>
+                  </div>
+                )}
               </Link>
               <button
                 onClick={signOut}
@@ -144,6 +152,14 @@ const Navbar = () => {
                 <span className="font-cairo font-semibold text-foreground text-sm">
                   {user.fullName || "مستخدم"}
                 </span>
+                {user.role === "STUDENT" && (
+                  <div className="flex items-center gap-1 mr-auto bg-amber-500/10 rounded-full px-2 py-0.5">
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span className="font-cairo font-bold text-amber-600 text-xs">
+                      {user.points || 0}
+                    </span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => { signOut(); setOpen(false); }}

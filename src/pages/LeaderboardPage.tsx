@@ -31,7 +31,7 @@ const SkeletonRow = () => (
 type Period = 'all' | 'weekly';
 
 const LeaderboardPage = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const [period, setPeriod] = useState<Period>('all');
@@ -93,6 +93,10 @@ const LeaderboardPage = () => {
 
   // Initial load
   useEffect(() => {
+    // Refresh user points from server when visiting leaderboard
+    if (user) {
+      refreshUser();
+    }
     fetchLeaderboard(1, period);
     fetchMyStats();
   }, []);

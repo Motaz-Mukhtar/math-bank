@@ -1,4 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
@@ -95,18 +96,29 @@ const QuickActions = () => {
   );
 };
 
-const Index = () => (
-  <>
-    <Navbar />
-    <HeroSection />
-    <FeaturesSection />
-    <AuthGate>
-      <VideosSection />
-      <QuickActions />
-      <LeaderboardSection />
-    </AuthGate>
-    <Footer />
-  </>
-);
+const Index = () => {
+  const { refreshUser, user } = useAuth();
+
+  // Refresh user points when visiting home page
+  useEffect(() => {
+    if (user) {
+      refreshUser();
+    }
+  }, []);
+
+  return (
+    <>
+      <Navbar />
+      <HeroSection />
+      <FeaturesSection />
+      <AuthGate>
+        <VideosSection />
+        <QuickActions />
+        <LeaderboardSection />
+      </AuthGate>
+      <Footer />
+    </>
+  );
+};
 
 export default Index;

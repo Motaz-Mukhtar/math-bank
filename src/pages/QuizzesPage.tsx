@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   CheckCircle, XCircle, ArrowLeft, Trophy, Zap, RotateCcw, ChevronLeft, Flame, Brain, Sparkles,
-  Plus, Minus, X, Divide, Scale, Ruler, MailOpen, Award, Dumbbell
+  Plus, Minus, X, Divide, Scale, Ruler, MailOpen, Award, Dumbbell, Loader2
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -102,7 +102,7 @@ const categories: Category[] = [
 ];
 
 const QuizzesPage = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, updatePoints } = useAuth();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
@@ -114,6 +114,7 @@ const QuizzesPage = () => {
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [noQuestionsAvailable, setNoQuestionsAvailable] = useState(false);
 
   const pointsPerCorrect = selectedDifficulty ? difficultyMap[selectedDifficulty].pointsPerCorrect : 0;
@@ -159,22 +160,26 @@ const QuizzesPage = () => {
   };
 
   const handleSubmit = async (userAnswer: string) => {
-    if (answered || !session || !currentQuestion) return;
+    if (answered || submittingAnswer || !session || !currentQuestion) return;
 
-    setAnswered(true);
+    setSubmittingAnswer(true);
 
     try {
       // Submit answer to backend
       const result = await submitAnswer(session.sessionId, currentQuestion.question.id, userAnswer);
+      setAnswered(true);
       setIsCorrect(result.isCorrect);
 
       if (result.isCorrect) {
         setCorrectCount((c) => c + 1);
+        // Update points locally immediately
+        updatePoints(pointsPerCorrect);
       }
     } catch (error: any) {
       console.error("Failed to submit answer:", error);
       toast.error("فشل إرسال الإجابة");
-      setAnswered(false);
+    } finally {
+      setSubmittingAnswer(false);
     }
   };
 
@@ -200,7 +205,8 @@ const QuizzesPage = () => {
       try {
         setLoading(true);
         await completeSession(session.sessionId);
-        await refreshUser(); // Refresh user to get updated points
+        // Refresh user from server to ensure points are synced
+        await refreshUser();
         setFinished(true);
         toast.success(`تم إضافة ${correctCount * pointsPerCorrect} نقطة إلى رصيدك!`);
       } catch (error: any) {
@@ -222,6 +228,7 @@ const QuizzesPage = () => {
     setIsCorrect(null);
     setCorrectCount(0);
     setFinished(false);
+    setSubmittingAnswer(false);
   };
 
   const backToCategories = () => {
@@ -234,6 +241,7 @@ const QuizzesPage = () => {
     setCorrectCount(0);
     setFinished(false);
     setNoQuestionsAvailable(false);
+    setSubmittingAnswer(false);
   };
 
   const retryCategory = () => {
@@ -421,38 +429,96 @@ const QuizzesPage = () => {
                 </div>
 
                 {/* Use QuestionRenderer for all question types */}
-                <QuestionRenderer
-                  question={{
-                    ...currentQuestion.question,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                  } as Question}
-                  onSubmit={handleSubmit}
-                />
+                <div className={`transition-opacity duration-200 ${submittingAnswer ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                  <QuestionRenderer
+                    question={{
+                      ...currentQuestion.question,
+                      createdAt: new Date(),
+                      updatedAt: new Date()
+                    } as Question}
+                    onSubmit={handleSubmit}
+                  />
+                </div>
+
+                {/* Loading indicator while submitting */}
+                {submittingAnswer && !answered && (
+                  <div className="flex items-center justify-center gap-2 py-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <span className="font-cairo text-sm text-muted-foreground">جاري التحقق من الإجابة...</span>
+                  </div>
+                )}
 
                 {answered && isCorrect !== null && (
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-2">
-                      {isCorrect ? (
-                        <>
-                          <CheckCircle className="w-5 h-5 text-[hsl(var(--success))]" />
-                          <span className="font-cairo font-bold text-[hsl(var(--success))]">إجابة صحيحة! +{pointsPerCorrect}</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-5 h-5 text-destructive" />
-                          <span className="font-cairo font-bold text-destructive">إجابة خاطئة</span>
-                        </>
-                      )}
+                  <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+                      isCorrect 
+                        ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800' 
+                        : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        {isCorrect ? (
+                          <>
+                            <div className="relative">
+                              <CheckCircle className="w-8 h-8 text-emerald-600 animate-in zoom-in duration-300" />
+                              <div className="absolute inset-0 animate-ping">
+                                <CheckCircle className="w-8 h-8 text-emerald-600 opacity-75" />
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-cairo font-extrabold text-lg text-emerald-700 dark:text-emerald-500 block">
+                                إجابة صحيحة! 🎉
+                              </span>
+                              <span className="font-cairo text-sm text-emerald-600 dark:text-emerald-400">
+                                +{pointsPerCorrect} نقاط
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="relative">
+                              <XCircle className="w-8 h-8 text-red-600 animate-in zoom-in duration-300" />
+                              <div className="absolute inset-0 animate-pulse">
+                                <XCircle className="w-8 h-8 text-red-600 opacity-50" />
+                              </div>
+                            </div>
+                            <div>
+                              <span className="font-cairo font-extrabold text-lg text-red-700 dark:text-red-500 block">
+                                إجابة خاطئة
+                              </span>
+                              <span className="font-cairo text-sm text-red-600 dark:text-red-400">
+                                حاول مرة أخرى في المرة القادمة
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <button
+                        onClick={nextQuestion}
+                        disabled={loading}
+                        className={`flex items-center gap-2 font-cairo font-bold px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 ${
+                          isCorrect
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground'
+                        }`}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            جاري التحميل...
+                          </>
+                        ) : currentIndex + 1 < 10 ? (
+                          <>
+                            التالي
+                            <ArrowLeft className="w-4 h-4" />
+                          </>
+                        ) : (
+                          <>
+                            النتيجة
+                            <Trophy className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={nextQuestion}
-                      disabled={loading}
-                      className="flex items-center gap-1.5 gradient-hero text-primary-foreground font-cairo font-bold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-shadow active:scale-[0.97] disabled:opacity-50"
-                    >
-                      {loading ? "جاري التحميل..." : currentIndex + 1 < 10 ? "التالي" : "النتيجة"}
-                      <ArrowLeft className="w-4 h-4" />
-                    </button>
                   </div>
                 )}
               </div>

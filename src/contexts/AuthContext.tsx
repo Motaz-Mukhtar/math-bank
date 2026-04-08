@@ -9,6 +9,7 @@ interface AuthContextType {
   setAuth: (user: User, token: string) => void;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updatePoints: (pointsToAdd: number) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   setAuth: () => {},
   signOut: async () => {},
   refreshUser: async () => {},
+  updatePoints: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -43,6 +45,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Failed to refresh user:', error);
       // Don't clear auth on refresh failure - user might just be offline
     }
+  };
+
+  const updatePoints = (pointsToAdd: number) => {
+    if (!user) return;
+    
+    const updatedUser = {
+      ...user,
+      points: Number(user.points) + pointsToAdd,
+    };
+    
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
   const signOut = async () => {
@@ -92,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAuthenticated, setAuth, signOut, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, isAuthenticated, setAuth, signOut, refreshUser, updatePoints }}>
       {children}
     </AuthContext.Provider>
   );

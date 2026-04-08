@@ -7,6 +7,7 @@ export interface User {
   email: string;
   phone?: string | null;
   role: Role;
+  points: Number;
   academicNumber?: string | null;
   isEmailVerified: boolean;
   createdAt: string;

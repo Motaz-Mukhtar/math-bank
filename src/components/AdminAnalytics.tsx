@@ -183,10 +183,31 @@ const AdminAnalytics = ({ stats }: AdminAnalyticsProps) => {
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.topStudents} layout="vertical" margin={{ top: 4, right: 16, left: 4, bottom: 4 }}>
+                <BarChart data={stats.topStudents} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 10 }} className="text-muted-foreground" />
-                  <YAxis dataKey="name" type="category" width={90} tick={{ fontSize: 11, fontFamily: "Cairo" }} className="text-muted-foreground" />
+                  <YAxis
+                    dataKey="name"
+                    type="category" 
+                    width={100}
+                    tick={(props: any) => {
+                      const { x, y, payload } = props;
+                      return (
+                        <g transform={`translate(${x},${y})`}>
+                          <text
+                            dy={4}
+                            textAnchor="start"
+                            fill="currentColor"
+                            fontSize={11}
+                            fontFamily="Cairo"
+                            className="text-muted-foreground"
+                          >
+                            {payload.value}
+                          </text>
+                        </g>
+                      );
+                    }}
+                    interval={0}/>
                   <ReTooltip content={<CustomTooltip />} />
                   <Bar dataKey="points" name="النقاط" radius={[0, 6, 6, 0]} maxBarSize={28}>
                     {stats.topStudents.map((_, i) => (

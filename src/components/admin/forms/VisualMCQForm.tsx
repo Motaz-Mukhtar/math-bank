@@ -86,6 +86,10 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
   const [answer, setAnswer] = useState<'0' | '1' | '2' | '3'>(
     value?.answer || '0'
   );
+  // Track JSON input values separately to allow editing
+  const [paramsInputs, setParamsInputs] = useState<string[]>(
+    choices.map(c => JSON.stringify(c.params))
+  );
 
   // Update choices with default params when SVG type changes
   const handleSvgTypeChange = (newType: SVGType) => {
@@ -93,12 +97,15 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
     
     // Update all choices with default params for the new type
     const defaultParams = DEFAULT_PARAMS_BY_TYPE[newType] || {};
-    const newChoices = choices.map((choice, index) => ({
+    const newChoices = choices.map((choice) => ({
       ...choice,
-      params: Object.keys(choice.params).length === 0 ? defaultParams : choice.params,
+      params: defaultParams,
     }));
     setChoices(newChoices);
+    // Update input values
+    setParamsInputs(newChoices.map(c => JSON.stringify(c.params)));
   };
+  
   // Emit changes to parent
   useEffect(() => {
     onChange({
@@ -108,15 +115,30 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
     });
   }, [svgType, choices, answer, onChange]);
 
-  const handleParamsChange = (index: number, paramsJson: string) => {
+  // Sync paramsInputs when choices change from external source (e.g., loading in edit mode)
+  useEffect(() => {
+    if (value?.choices) {
+      setParamsInputs(value.choices.map(c => JSON.stringify(c.params)));
+    }
+  }, [value?.choices]);
+
+  const handleParamsInputChange = (index: number, paramsJson: string) => {
+    // Update the input value immediately for user feedback
+    const newInputs = [...paramsInputs];
+    newInputs[index] = paramsJson;
+    setParamsInputs(newInputs);
+    
+    // Try to parse and update choices if valid JSON
     try {
       const params = JSON.parse(paramsJson);
       const newChoices = [...choices];
       newChoices[index] = { ...newChoices[index], params };
+      console.log(`Choice ${index} params updated:`, params);
+      console.log('All choices after update:', newChoices);
       setChoices(newChoices);
     } catch (error) {
-      // Invalid JSON, don't update
-      console.error('Invalid JSON for params:', error);
+      // Invalid JSON, keep the input value but don't update choices
+      console.log('Invalid JSON (will update when valid):', error);
     }
   };
 
@@ -190,8 +212,8 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
               </Label>
               <Input
                 id={`params-${index}`}
-                value={JSON.stringify(choice.params)}
-                onChange={(e) => handleParamsChange(index, e.target.value)}
+                value={paramsInputs[index]}
+                onChange={(e) => handleParamsInputChange(index, e.target.value)}
                 placeholder={JSON.stringify(DEFAULT_PARAMS_BY_TYPE[svgType] || {})}
                 className="w-full font-mono text-sm"
                 dir="ltr"

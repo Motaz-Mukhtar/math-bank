@@ -78,7 +78,7 @@ const VerifyEmailPage = () => {
                 onChange={(value) => setCode(value)}
                 dir="ltr"
               >
-                <InputOTPGroup>
+                <InputOTPGroup className="flex-row-reverse">
                   <InputOTPSlot index={0} />
                   <InputOTPSlot index={1} />
                   <InputOTPSlot index={2} />

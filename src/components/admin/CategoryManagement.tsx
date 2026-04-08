@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Pencil, Trash2, FolderOpen, Plus, Search } from "lucide-react";
+import { Loader2, Pencil, Trash2, FolderOpen, Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   getCategories,
@@ -28,13 +28,21 @@ import {
   updateVideoCategory,
   deleteVideoCategory,
   type VideoCategory,
+  type PaginationMeta,
 } from "@/services/video.api";
 
 export const CategoryManagement = () => {
   const [categories, setCategories] = useState<VideoCategory[]>([]);
-  const [filteredCategories, setFilteredCategories] = useState<VideoCategory[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearch, setActiveSearch] = useState(""); // The search term being used in API
   const [editingCategory, setEditingCategory] = useState<VideoCategory | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<VideoCategory | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -47,29 +55,14 @@ export const CategoryManagement = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    // Filter categories based on search query
-    if (!searchQuery.trim()) {
-      setFilteredCategories(categories);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredCategories(
-        categories.filter(
-          (cat) =>
-            cat.name.toLowerCase().includes(query) ||
-            cat.description?.toLowerCase().includes(query)
-        )
-      );
-    }
-  }, [searchQuery, categories]);
+  }, [currentPage, activeSearch]);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await getCategories();
-      setCategories(data);
+      const response = await getCategories(currentPage, 10, activeSearch || undefined);
+      setCategories(response.categories);
+      setPagination(response.pagination);
     } catch (error: any) {
       console.error("Failed to fetch categories:", error);
       toast.error("فشل تحميل الفصول");
@@ -77,6 +70,27 @@ export const CategoryManagement = () => {
       setLoading(false);
     }
   };
+
+  const handleSearch = () => {
+    setActiveSearch(searchQuery.trim());
+    setCurrentPage(1); // Reset to page 1 when searching
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setActiveSearch("");
+    setCurrentPage(1);
+  };
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  // No need for client-side filtering anymore - backend handles it
+  const filteredCategories = categories;
+  const displayCount = pagination.total;
 
   const handleEdit = (category: VideoCategory) => {
     setEditingCategory(category);
@@ -137,6 +151,10 @@ export const CategoryManagement = () => {
     setIsCreating(false);
   };
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
   const handleDelete = async () => {
     if (!deletingCategory) return;
 
@@ -171,18 +189,38 @@ export const CategoryManagement = () => {
           <div className="flex items-center justify-between gap-4">
             <CardTitle className="text-lg flex items-center gap-2">
               <FolderOpen className="w-5 h-5 text-primary" />
-              إدارة الفصول ({filteredCategories.length})
+              إدارة الفصول ({displayCount})
             </CardTitle>
             <div className="flex items-center gap-2">
-              <div className="relative">
+              <div className="relative flex-1">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="بحث بالاسم..."
+                  placeholder="بحث بالاسم أو الوصف..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
                   className="pr-10 font-cairo text-sm w-52 h-9"
                 />
               </div>
+              <Button
+                onClick={handleSearch}
+                variant="secondary"
+                className="gap-2 font-cairo h-9"
+                disabled={loading}
+              >
+                <Search className="w-4 h-4" />
+                بحث
+              </Button>
+              {activeSearch && (
+                <Button
+                  onClick={handleClearSearch}
+                  variant="outline"
+                  className="font-cairo h-9"
+                  disabled={loading}
+                >
+                  مسح البحث
+                </Button>
+              )}
               <Button onClick={handleCreate} className="gap-2 font-cairo">
                 <Plus className="w-4 h-4" />
                 إضافة فصل
@@ -191,66 +229,113 @@ export const CategoryManagement = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredCategories.length === 0 ? (
+          {filteredCategories?.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? "لا توجد نتائج للبحث" : "لا توجد فصول"}
+              {activeSearch ? "لا توجد نتائج للبحث" : "لا توجد فصول"}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right font-cairo">الاسم</TableHead>
-                    <TableHead className="text-right font-cairo">الوصف</TableHead>
-                    <TableHead className="text-right font-cairo">الترتيب</TableHead>
-                    <TableHead className="text-right font-cairo">عدد الفيديوهات</TableHead>
-                    <TableHead className="text-right font-cairo">الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCategories.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableCell className="font-medium font-cairo">
-                        {category.name}
-                      </TableCell>
-                      <TableCell className="font-cairo text-muted-foreground">
-                        {category.description || "-"}
-                      </TableCell>
-                      <TableCell className="font-cairo">{category.sortOrder}</TableCell>
-                      <TableCell className="font-cairo">
-                        {category.videos?.length || 0}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(category)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeletingCategory(category)}
-                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                            disabled={(category.videos?.length || 0) > 0}
-                            title={
-                              (category.videos?.length || 0) > 0
-                                ? "لا يمكن حذف فصل يحتوي على فيديوهات"
-                                : "حذف الفصل"
-                            }
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right font-cairo">الاسم</TableHead>
+                      <TableHead className="text-right font-cairo">الوصف</TableHead>
+                      <TableHead className="text-right font-cairo">الترتيب</TableHead>
+                      <TableHead className="text-right font-cairo">عدد الفيديوهات</TableHead>
+                      <TableHead className="text-right font-cairo">الإجراءات</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCategories?.map((category) => (
+                      <TableRow key={category.id}>
+                        <TableCell className="font-medium font-cairo">
+                          {category.name}
+                        </TableCell>
+                        <TableCell className="font-cairo text-muted-foreground">
+                          {category.description || "-"}
+                        </TableCell>
+                        <TableCell className="font-cairo">{category.sortOrder}</TableCell>
+                        <TableCell className="font-cairo">
+                          {category._count?.videos || 0}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(category)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeletingCategory(category)}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              disabled={(category._count?.videos || 0) > 0}
+                              title={
+                                (category._count?.videos || 0) > 0
+                                  ? "لا يمكن حذف فصل يحتوي على فيديوهات"
+                                  : "حذف الفصل"
+                              }
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination Controls */}
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-muted-foreground font-cairo">
+                    صفحة {pagination.page} من {pagination.totalPages} — {pagination.total} فصل
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      className="gap-1 font-cairo"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                      السابق
+                    </Button>
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pagination.page === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page === pagination.totalPages}
+                      className="gap-1 font-cairo"
+                    >
+                      التالي
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

@@ -8,7 +8,9 @@ export interface VideoCategory {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
-  videos?: Video[];
+  _count?: {
+    videos: number;
+  };
 }
 
 export interface Video {
@@ -26,12 +28,44 @@ export interface Video {
   };
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedVideosResponse {
+  videos: Video[];
+  pagination: PaginationMeta;
+}
+
+export interface PaginatedCategoriesResponse {
+  categories: VideoCategory[];
+  pagination: PaginationMeta;
+}
+
 /**
- * Get all video categories with nested videos
- * GET /api/v1/video-categories
+ * Get all video categories with nested videos and pagination
+ * GET /api/v1/video-categories?page=1&limit=10&search=query
  */
-export const getCategories = async (): Promise<VideoCategory[]> => {
-  const response = await apiClient.get<ApiResponse<VideoCategory[]>>('/video-categories');
+export const getCategories = async (page: number = 1, limit: number = 10, search?: string): Promise<PaginatedCategoriesResponse> => {
+  let url = `/video-categories?page=${page}&limit=${limit}`;
+  if (search?.trim()) {
+    url += `&search=${encodeURIComponent(search.trim())}`;
+  }
+  const response = await apiClient.get<ApiResponse<PaginatedCategoriesResponse>>(url);
+  return response.data.data;
+};
+
+/**
+ * Get all categories without pagination (for dropdowns)
+ * GET /api/v1/video-categories/list/all
+ */
+export const getAllCategoriesNoPagination = async (): Promise<{ categories: VideoCategory[] }> => {
+  const response = await apiClient.get<ApiResponse<{ categories: VideoCategory[] }>>(
+    '/video-categories/list/all'
+  );
   return response.data.data;
 };
 
@@ -45,13 +79,25 @@ export const getCategoryById = async (id: string): Promise<VideoCategory> => {
 };
 
 /**
- * Get all videos with optional category filter
- * GET /api/v1/videos
- * GET /api/v1/videos?categoryId=uuid
+ * Get all videos with optional category filter, search, and pagination
+ * GET /api/v1/videos?page=1&limit=10
+ * GET /api/v1/videos?categoryId=uuid&page=1&limit=10
+ * GET /api/v1/videos?search=query&page=1&limit=10
  */
-export const getVideos = async (categoryId?: string): Promise<Video[]> => {
-  const url = categoryId ? `/videos?categoryId=${categoryId}` : '/videos';
-  const response = await apiClient.get<ApiResponse<Video[]>>(url);
+export const getVideos = async (
+  page: number = 1,
+  limit: number = 10,
+  categoryId?: string,
+  search?: string
+): Promise<PaginatedVideosResponse> => {
+  let url = `/videos?page=${page}&limit=${limit}`;
+  if (categoryId) {
+    url += `&categoryId=${categoryId}`;
+  }
+  if (search?.trim()) {
+    url += `&search=${search.trim()}`;
+  }
+  const response = await apiClient.get<ApiResponse<PaginatedVideosResponse>>(url);
   return response.data.data;
 };
 

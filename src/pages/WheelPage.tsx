@@ -2,12 +2,13 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 import { spin as spinWheel, startSession, submitAnswer } from "@/services/wheel.api";
 import type { SpinWheelResponse } from "@/services/wheel.api";
 import { QuizCategory } from "@/types/question";
 import { QuestionRenderer } from "@/components/quiz";
 import { Question } from "@/types";
-import { CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const segments = [
@@ -21,6 +22,7 @@ const segments = [
 
 const WheelPage = () => {
   const navigate = useNavigate();
+  const { updatePoints } = useAuth();
   const wheelRef = useRef<SVGSVGElement>(null);
 
   const [spinning, setSpinning] = useState(false);
@@ -28,7 +30,7 @@ const WheelPage = () => {
   const [selected, setSelected] = useState<string | null>(null);
   const [answered, setAnswered] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [submittingAnswer, setSubmittingAnswer] = useState(false);
   const [question, setQuestion] = useState<SpinWheelResponse | null>(null);
   const [pointEarned, setPointEarned] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
@@ -74,21 +76,25 @@ const WheelPage = () => {
   };
 
   const handleAnswer = async (userAnswer: string) => {
-    if (answered || !question) return;
-    setIsLoading(true);
-    setAnswered(true);
+    if (answered || submittingAnswer || !question) return;
+    
+    setSubmittingAnswer(true);
     setPointEarned(question.points);
 
     try {
       const session = await getWheelSession();
       const result = await submitAnswer(session.sessionId, question.id, userAnswer);
+      setAnswered(true);
       setIsCorrect(result.isCorrect);
-      if (result.isCorrect) setTotalPoints((p) => p + question.points);
+      if (result.isCorrect) {
+        setTotalPoints((p) => p + question.points);
+        // Update points locally immediately
+        updatePoints(question.points);
+      }
     } catch (err: any) {
       toast.error("فشل إرسال الإجابة");
-      setAnswered(false);
     } finally {
-      setIsLoading(false);
+      setSubmittingAnswer(false);
     }
   };
 
@@ -180,42 +186,82 @@ const WheelPage = () => {
 
               {question ? (
                 <div className="bg-card rounded-2xl p-6 shadow-sm border border-border space-y-5">
-                  <QuestionRenderer
-                    question={{
-                      ...question,
-                      createdAt: new Date(),
-                      updatedAt: new Date(),
-                    } as Question}
-                    onSubmit={handleAnswer}
-                  />
+                  <div className={`transition-opacity duration-200 ${submittingAnswer ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                    <QuestionRenderer
+                      question={{
+                        ...question,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                      } as Question}
+                      onSubmit={handleAnswer}
+                    />
+                  </div>
+
+                  {/* Loading indicator while submitting */}
+                  {submittingAnswer && !answered && (
+                    <div className="flex items-center justify-center gap-2 py-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      <span className="font-cairo text-sm text-muted-foreground">جاري التحقق من الإجابة...</span>
+                    </div>
+                  )}
 
                   {answered && (
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-2">
-                        {!isLoading && (
-                          isCorrect ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+                        isCorrect 
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800' 
+                          : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          {isCorrect ? (
                             <>
-                              <CheckCircle className="w-5 h-5 text-[hsl(var(--success))]" />
-                              <span className="font-cairo font-bold text-[hsl(var(--success))]">
-                                إجابة صحيحة! +{pointEarned}
-                              </span>
+                              <div className="relative">
+                                <CheckCircle className="w-8 h-8 text-emerald-600 animate-in zoom-in duration-300" />
+                                <div className="absolute inset-0 animate-ping">
+                                  <CheckCircle className="w-8 h-8 text-emerald-600 opacity-75" />
+                                </div>
+                              </div>
+                              <div>
+                                <span className="font-cairo font-extrabold text-lg text-emerald-700 dark:text-emerald-500 block">
+                                  إجابة صحيحة! 🎉
+                                </span>
+                                <span className="font-cairo text-sm text-emerald-600 dark:text-emerald-400">
+                                  +{pointEarned} نقطة
+                                </span>
+                              </div>
                             </>
                           ) : (
                             <>
-                              <XCircle className="w-5 h-5 text-destructive" />
-                              <span className="font-cairo font-bold text-destructive">إجابة خاطئة</span>
+                              <div className="relative">
+                                <XCircle className="w-8 h-8 text-red-600 animate-in zoom-in duration-300" />
+                                <div className="absolute inset-0 animate-pulse">
+                                  <XCircle className="w-8 h-8 text-red-600 opacity-50" />
+                                </div>
+                              </div>
+                              <div>
+                                <span className="font-cairo font-extrabold text-lg text-red-700 dark:text-red-500 block">
+                                  إجابة خاطئة
+                                </span>
+                                <span className="font-cairo text-sm text-red-600 dark:text-red-400">
+                                  حاول مرة أخرى
+                                </span>
+                              </div>
                             </>
-                          )
-                        )}
+                          )}
+                        </div>
+                        <button
+                          onClick={spin}
+                          disabled={spinning || submittingAnswer}
+                          className={`flex items-center gap-2 font-cairo font-bold px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-50 ${
+                            isCorrect
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                              : 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground'
+                          }`}
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                          أدر مرة أخرى
+                        </button>
                       </div>
-                      <button
-                        onClick={spin}
-                        disabled={spinning || isLoading}
-                        className="flex items-center gap-1.5 gradient-hero text-primary-foreground font-cairo font-bold px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-shadow active:scale-[0.97] disabled:opacity-50 text-sm"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                        أدر مرة أخرى
-                      </button>
                     </div>
                   )}
                 </div>
