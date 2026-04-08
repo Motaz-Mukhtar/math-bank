@@ -48,7 +48,7 @@ const AuthGate = ({ children }: { children: React.ReactNode }) => {
 const QuickActions = () => {
   const navigate = useNavigate();
   return (
-    <section className="py-16 bg-card">
+    <section id="quiz" className="py-16 bg-card">
       <div className="container max-w-3xl">
         <h2 className="font-cairo font-extrabold text-2xl md:text-3xl text-center text-foreground mb-2">
           ابدأ التعلم الآن
