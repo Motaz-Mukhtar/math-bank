@@ -49,9 +49,7 @@ export const VisualMCQQuestion: React.FC<VisualMCQQuestionProps> = ({ question, 
                 {hasValidParams ? (
                   <div style={{ 
                     transform: 'scale(8.5)', 
-                    transformOrigin: 'center',
-                    width: '28px',
-                    height: '28px'
+                    transformOrigin: 'center'
                   }}>
                     <SVGRenderer
                       svgType={question.options.svgType}
@@ -67,9 +65,9 @@ export const VisualMCQQuestion: React.FC<VisualMCQQuestionProps> = ({ question, 
                   </div>
                 )}
               </div>
-              {choice.label && (
+              {/* {choice.label && (
                 <span className="text-lg font-bold text-black">{choice.label}</span>
-              )}
+              )} */}
             </Button>
           );
         })}
