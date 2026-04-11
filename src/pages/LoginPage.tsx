@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { login } from "@/services/auth.api";
+import { login, resendVerification } from "@/services/auth.api";
 import { Calculator, Mail, Lock, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,13 +35,35 @@ const LoginPage = () => {
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || "حدث خطأ أثناء تسجيل الدخول";
-      // setError(errorMessage);
-      toast.error(errorMessage, {
-        duration: 5000, // Show toast for 5 seconds,
-        position: 'top-center'
-      });
-      setLoading(false); // Set loading to false here to prevent re-render
-      return; // Return early to prevent finally block
+      const statusCode = err.response?.data?.statusCode;
+      
+      // Check if account is not verified
+      if (statusCode === 403 && errorMessage.includes("تفعيل")) {
+        toast.error(errorMessage, {
+          duration: 8000,
+          position: 'top-center',
+          action: {
+            label: "إعادة إرسال رمز التحقق",
+            onClick: async () => {
+              try {
+                await resendVerification({ email });
+                toast.success("تم إرسال رمز التحقق بنجاح");
+                navigate("/verify-email", { state: { email } });
+              } catch (resendErr: any) {
+                toast.error(resendErr.response?.data?.error || "فشل إرسال رمز التحقق");
+              }
+            },
+          },
+        });
+      } else {
+        toast.error(errorMessage, {
+          duration: 5000,
+          position: 'top-center'
+        });
+      }
+      
+      setLoading(false);
+      return;
     }
     
     setLoading(false);

@@ -30,6 +30,10 @@ export interface ResetPasswordDto {
   newPassword: string;
 }
 
+export interface ResendVerificationDto {
+  email: string;
+}
+
 export interface AuthResponse {
   user: User;
   accessToken: string;
@@ -54,6 +58,18 @@ export const register = async (data: RegisterDto): Promise<{ message: string }> 
 export const verifyEmail = async (data: VerifyEmailDto): Promise<{ message: string }> => {
   const response = await apiClient.post<ApiResponse<{ message: string }>>(
     '/auth/verify-email',
+    data
+  );
+  return response.data.data;
+};
+
+/**
+ * Resend verification email
+ * POST /api/v1/auth/resend-verification
+ */
+export const resendVerification = async (data: ResendVerificationDto): Promise<{ message: string }> => {
+  const response = await apiClient.post<ApiResponse<{ message: string }>>(
+    '/auth/resend-verification',
     data
   );
   return response.data.data;

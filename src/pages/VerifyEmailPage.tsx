@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { verifyEmail } from "@/services/auth.api";
+import { verifyEmail, resendVerification } from "@/services/auth.api";
 import { Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
@@ -13,6 +13,7 @@ const VerifyEmailPage = () => {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +41,26 @@ const VerifyEmailPage = () => {
       toast.error(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      toast.error("البريد الإلكتروني مفقود");
+      return;
+    }
+
+    setResending(true);
+    try {
+      await resendVerification({ email });
+      toast.success("تم إرسال رمز التحقق بنجاح");
+      setCode(""); // Clear the code input
+      setError(""); // Clear any errors
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || "فشل إرسال رمز التحقق";
+      toast.error(errorMessage);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -101,10 +122,11 @@ const VerifyEmailPage = () => {
               لم تستلم الرمز؟{" "}
               <button
                 type="button"
-                className="text-primary font-bold hover:underline"
-                onClick={() => toast.info("يرجى الانتظار قليلاً ثم التحقق من صندوق البريد")}
+                disabled={resending}
+                className="text-primary font-bold hover:underline disabled:opacity-60"
+                onClick={handleResend}
               >
-                إعادة الإرسال
+                {resending ? "جاري الإرسال..." : "إعادة الإرسال"}
               </button>
             </p>
 
