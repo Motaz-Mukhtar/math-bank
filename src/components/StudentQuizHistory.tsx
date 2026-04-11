@@ -45,7 +45,6 @@ const StudentQuizHistory = ({ studentProfileId, studentName }: Props) => {
       setLoading(true);
 
       const response = await getChildProgress(studentProfileId);
-      console.log(response.quizHistory);
       // setResults((response as QuizResult[]) || []);
       setResults(response.quizHistory);
       setLoading(false);

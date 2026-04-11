@@ -45,6 +45,14 @@ export interface PaginatedCategoriesResponse {
   pagination: PaginationMeta;
 }
 
+export interface CategoryWithVideos {
+  categoryId: string;
+  categoryName: string;
+  categoryDescription: string | null;
+  sortOrder: number;
+  videos: Video[];
+}
+
 /**
  * Get all video categories with nested videos and pagination
  * GET /api/v1/video-categories?page=1&limit=10&search=query
@@ -65,6 +73,18 @@ export const getCategories = async (page: number = 1, limit: number = 10, search
 export const getAllCategoriesNoPagination = async (): Promise<{ categories: VideoCategory[] }> => {
   const response = await apiClient.get<ApiResponse<{ categories: VideoCategory[] }>>(
     '/video-categories/list/all'
+  );
+  return response.data.data;
+};
+
+/**
+ * Get all categories with their videos (no pagination)
+ * Returns categories grouped with their videos for display
+ * GET /api/v1/video-categories/videos
+ */
+export const getCategoriesWithVideos = async (): Promise<CategoryWithVideos[]> => {
+  const response = await apiClient.get<ApiResponse<CategoryWithVideos[]>>(
+    '/video-categories/videos'
   );
   return response.data.data;
 };

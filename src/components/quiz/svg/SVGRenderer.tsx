@@ -9,7 +9,6 @@ interface SVGRendererProps {
 
 export const SVGRenderer: React.FC<SVGRendererProps> = ({ svgType, params, size = 500 }) => {
   // Debug: Log what params are being received
-  console.log('SVGRenderer received:', { svgType, params, size });
   
   switch (svgType) {
     case SVGType.FRACTION_CIRCLE:

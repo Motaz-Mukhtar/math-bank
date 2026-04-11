@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Play, ArrowRight, BookOpen, CheckCircle, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getCategories } from "@/services/video.api";
+import { getCategories, getCategoriesWithVideos } from "@/services/video.api";
 import type { VideoCategory, Video } from "@/services/video.api";
 import { toast } from "sonner";
 
@@ -34,11 +34,12 @@ const VideosPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await getCategories();
+        const data = await getCategoriesWithVideos();
+
         setCategories(data);
         // Expand first category by default
         if (data.length > 0) {
-          setExpandedUnits(new Set([data[0].id]));
+          setExpandedUnits(new Set([data[0].categoryId]));
         }
       } catch (error: any) {
         console.error("Failed to fetch categories:", error);
@@ -65,7 +66,7 @@ const VideosPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const totalVideos = categories.reduce((s, c) => s + (c.videos?.length || 0), 0);
+  const totalVideos = categories?.reduce((s, c) => s + (c.videos?.length || 0), 0);
 
   if (loading) {
     return (
@@ -149,24 +150,24 @@ const VideosPage = () => {
           {/* Units */}
           <div className="space-y-4">
             {categories.map((category, idx) => {
-              const isExpanded = expandedUnits.has(category.id);
+              const isExpanded = expandedUnits.has(category.categoryId);
               const videos = category.videos || [];
               const watched = videos.filter((v) => watchedVideos.has(v.id)).length;
               const color = colors[idx % colors.length];
 
               return (
-                <div key={category.id} className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <div key={category.categoryId} className="bg-card rounded-2xl shadow-sm overflow-hidden">
                   {/* Unit header */}
                   <button
-                    onClick={() => toggleUnit(category.id)}
+                    onClick={() => toggleUnit(category.categoryId)}
                     className="w-full flex items-center gap-4 p-5 text-right hover:bg-muted/30 transition-colors active:scale-[0.99]"
                   >
                     <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center shrink-0`}>
                       <BookOpen className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-cairo font-bold text-foreground text-sm md:text-base">{category.name}</h3>
-                      <p className="text-muted-foreground text-xs font-cairo truncate">{category.description || "فيديوهات تعليمية"}</p>
+                      <h3 className="font-cairo font-bold text-foreground text-sm md:text-base">{category.categoryName}</h3>
+                      <p className="text-muted-foreground text-xs font-cairo truncate">{category.categoryDescription || "فيديوهات تعليمية"}</p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="font-cairo text-xs text-muted-foreground hidden sm:block">
@@ -204,7 +205,7 @@ const VideosPage = () => {
                           <p className="font-cairo text-muted-foreground text-sm">لا توجد فيديوهات في هذا الفصل</p>
                         </div>
                       ) : (
-                        videos.map((video, videoIdx) => {
+                        videos.map((video: Video, videoIdx: number) => {
                           const isActive = activeVideo?.id === video.id;
                           const isWatched = watchedVideos.has(video.id);
                           const youtubeId = extractYouTubeId(video.url);

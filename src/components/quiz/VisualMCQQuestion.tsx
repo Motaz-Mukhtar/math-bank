@@ -13,11 +13,6 @@ export const VisualMCQQuestion: React.FC<VisualMCQQuestionProps> = ({ question, 
     onSubmit(index.toString());
   };
 
-  // Debug: Log question data
-  console.log('VisualMCQQuestion rendering:', question);
-  console.log('Question options:', question.options);
-  console.log('Choices:', question.options?.choices);
-
   // Validate question data
   if (!question.options?.choices || question.options.choices.length === 0) {
     console.error('Invalid VisualMCQ question data:', question);

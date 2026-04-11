@@ -93,7 +93,6 @@ const QuizWheel = () => {
       setSelected(segments[idx].id);
 
       const wheelSession = await getWheelSession();
-      console.log(wheelSession);
 
       const response = await spinWheel(wheelSession.sessionId, segments[idx].id);
 

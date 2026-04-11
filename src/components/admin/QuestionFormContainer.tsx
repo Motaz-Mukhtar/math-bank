@@ -172,8 +172,6 @@ export function QuestionFormContainer({
           setMatchingData({ ...question.options, answer: question.answer });
           break;
         case QuestionType.VISUAL_MCQ:
-          console.log('Loading Visual MCQ question:', question);
-          console.log('Question options:', question.options);
           setVisualMcqData({ ...question.options, answer: question.answer });
           break;
         case QuestionType.CLOCK_READ:
@@ -266,7 +264,6 @@ export function QuestionFormContainer({
             return;
           }
           // Debug: Log the visual MCQ data before sending
-          console.log('Visual MCQ Data being sent:', JSON.stringify(visualMcqData, null, 2));
           payload.options = {
             svgType: visualMcqData.svgType,
             choices: visualMcqData.choices,

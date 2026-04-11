@@ -98,8 +98,6 @@ export const VideoManagement = () => {
         categoryFilter !== "ALL" ? categoryFilter : undefined,
         activeSearch || undefined
       );
-      console.log("Videos");
-      console.log(response);
       setVideos(response.videos);
       setPagination(response.pagination);
     } catch (error: any) {

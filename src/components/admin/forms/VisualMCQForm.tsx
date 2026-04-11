@@ -133,8 +133,7 @@ export function VisualMCQForm({ value, onChange }: VisualMCQFormProps) {
       const params = JSON.parse(paramsJson);
       const newChoices = [...choices];
       newChoices[index] = { ...newChoices[index], params };
-      console.log(`Choice ${index} params updated:`, params);
-      console.log('All choices after update:', newChoices);
+
       setChoices(newChoices);
     } catch (error) {
       // Invalid JSON, keep the input value but don't update choices

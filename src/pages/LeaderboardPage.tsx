@@ -63,7 +63,6 @@ const LeaderboardPage = () => {
         setError(null);
 
         const data = await getFullLeaderboard(p, 20, per);
-        console.log(data);
         setEntries((prev) => (append ? [...prev, ...data.entries] : data.entries));
         setHasMore(data.meta.page < data.meta.totalPages);
         setLastUpdated(new Date());
