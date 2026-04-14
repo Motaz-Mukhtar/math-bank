@@ -150,24 +150,25 @@ const VideosPage = () => {
           {/* Units */}
           <div className="space-y-4">
             {categories.map((category, idx) => {
-              const isExpanded = expandedUnits.has(category.categoryId);
+              console.log(category);
+              const isExpanded = expandedUnits.has(category.id);
               const videos = category.videos || [];
               const watched = videos.filter((v) => watchedVideos.has(v.id)).length;
               const color = colors[idx % colors.length];
 
               return (
-                <div key={category.categoryId} className="bg-card rounded-2xl shadow-sm overflow-hidden">
+                <div key={category.id} className="bg-card rounded-2xl shadow-sm overflow-hidden">
                   {/* Unit header */}
                   <button
-                    onClick={() => toggleUnit(category.categoryId)}
+                    onClick={() => toggleUnit(category.id)}
                     className="w-full flex items-center gap-4 p-5 text-right hover:bg-muted/30 transition-colors active:scale-[0.99]"
                   >
                     <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center shrink-0`}>
                       <BookOpen className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-cairo font-bold text-foreground text-sm md:text-base">{category.categoryName}</h3>
-                      <p className="text-muted-foreground text-xs font-cairo truncate">{category.categoryDescription || "فيديوهات تعليمية"}</p>
+                      <h3 className="font-cairo font-bold text-foreground text-sm md:text-base">{category.name}</h3>
+                      <p className="text-muted-foreground text-xs font-cairo truncate">{category.description || "فيديوهات تعليمية"}</p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="font-cairo text-xs text-muted-foreground hidden sm:block">
