@@ -2,7 +2,12 @@ import axios, { AxiosError, AxiosInstance } from 'axios';
 import { ApiError, ApiResponse } from '@/types';
 
 
-const API_BASE_URL = "https://math-bank-backend.vercel.app/api/v1";
+let API_BASE_URL: string;
+
+if (import.meta.env.DEV)
+  API_BASE_URL = "http://localhost:4000/api/v1";
+else
+  API_BASE_URL = "https://math-bank-backend.vercel.app/api/v1";
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({

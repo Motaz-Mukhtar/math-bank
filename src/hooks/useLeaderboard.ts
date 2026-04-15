@@ -1,26 +1,43 @@
-import { useState, useEffect } from 'react';
-import { LeaderboardResponse } from '@/types';
-import { getLeaderboardTop } from '@/services/leaderboard.api';
+import { useQuery } from '@tanstack/react-query';
+import { getTopLeaderboard, getFullLeaderboard } from '@/services/leaderboard.api';
 
-export const useLeaderboard = () => {
-  const [data, setData] = useState<LeaderboardResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Hook to fetch top leaderboard entries (for main page)
+ * Cached for 60 seconds to match backend cache
+ */
+export function useTopLeaderboard(limit: number = 8) {
+  return useQuery({
+    queryKey: ['leaderboard', 'top', limit],
+    queryFn: () => getTopLeaderboard(limit),
+    staleTime: 1000 * 60, // 60 seconds - matches backend cache
+    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
+  });
+}
 
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getLeaderboardTop(8);
-      setData(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ في تحميل لوحة المتصدرين');
-    } finally {
-      setLoading(false);
-    }
-  };
+/**
+ * Hook to fetch full paginated leaderboard
+ * Cached for 30 seconds to match backend cache
+ */
+export function useFullLeaderboard(page: number = 1, limit: number = 20) {
+  return useQuery({
+    queryKey: ['leaderboard', 'full', page, limit],
+    queryFn: () => getFullLeaderboard(page, limit),
+    staleTime: 1000 * 30, // 30 seconds - matches backend cache
+    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
+    keepPreviousData: true, // Keep previous page data while fetching new page
+  });
+}
 
-  useEffect(() => { fetchLeaderboard(); }, []);
-
-  return { data, loading, error, refetch: fetchLeaderboard };
-};
+/**
+ * Hook to fetch weekly leaderboard
+ * Cached for 60 seconds
+ */
+export function useWeeklyLeaderboard(page: number = 1, limit: number = 20) {
+  return useQuery({
+    queryKey: ['leaderboard', 'weekly', page, limit],
+    queryFn: () => getFullLeaderboard(page, limit, 'weekly'),
+    staleTime: 1000 * 60, // 60 seconds
+    gcTime: 1000 * 60 * 5,
+    keepPreviousData: true,
+  });
+}
