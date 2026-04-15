@@ -240,3 +240,105 @@ export const moveVideo = async (
   );
   return response.data.data;
 };
+
+// ─── Video Progress Tracking ─────────────────────────────────────────────────
+
+export interface VideoProgress {
+  id: string;
+  userId: string;
+  videoId: string;
+  watchedDuration: number;
+  totalDuration: number;
+  progressPercent: number;
+  isCompleted: boolean;
+  completedAt?: string;
+  lastWatchedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  video?: {
+    id: string;
+    title: string;
+  };
+}
+
+export interface VideoProgressStats {
+  totalVideos: number;
+  completedVideos: number;
+  inProgressVideos: number;
+  notStartedVideos: number;
+  completionRate: number;
+  totalWatchTimeSeconds: number;
+  totalWatchTimeMinutes: number;
+}
+
+/**
+ * Update video progress
+ * POST /api/v1/videos/:id/progress
+ */
+export const updateVideoProgress = async (
+  videoId: string,
+  data: {
+    watchedDuration: number;
+    totalDuration: number;
+    progressPercent: number;
+  }
+): Promise<VideoProgress> => {
+  const response = await apiClient.post<ApiResponse<VideoProgress>>(
+    `/videos/${videoId}/progress`,
+    data
+  );
+  return response.data.data;
+};
+
+/**
+ * Get progress for specific video
+ * GET /api/v1/videos/:id/progress
+ */
+export const getVideoProgress = async (videoId: string): Promise<VideoProgress | null> => {
+  try {
+    const response = await apiClient.get<ApiResponse<VideoProgress>>(
+      `/videos/${videoId}/progress`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Get all video progress for current user
+ * GET /api/v1/videos/progress/all?categoryId=uuid
+ */
+export const getAllVideoProgress = async (categoryId?: string): Promise<VideoProgress[]> => {
+  let url = '/videos/progress/all';
+  if (categoryId) {
+    url += `?categoryId=${categoryId}`;
+  }
+  const response = await apiClient.get<ApiResponse<VideoProgress[]>>(url);
+  return response.data.data;
+};
+
+/**
+ * Get video progress statistics
+ * GET /api/v1/videos/progress/stats
+ */
+export const getVideoProgressStats = async (): Promise<VideoProgressStats> => {
+  const response = await apiClient.get<ApiResponse<VideoProgressStats>>(
+    '/videos/progress/stats'
+  );
+  return response.data.data;
+};
+
+/**
+ * Get recently watched videos
+ * GET /api/v1/videos/progress/recent?limit=10
+ */
+export const getRecentlyWatchedVideos = async (limit: number = 10): Promise<VideoProgress[]> => {
+  const response = await apiClient.get<ApiResponse<VideoProgress[]>>(
+    `/videos/progress/recent?limit=${limit}`
+  );
+  return response.data.data;
+};
