@@ -230,7 +230,7 @@ const VideosPage = () => {
 
       // Show completion toast and stop tracking
       if (updatedProgress.isCompleted && !currentProgress?.isCompleted) {
-        toast.success("🎉 أحسنت! أكملت الفيديو بنجاح");
+        toast.success("🎉 أحسنت! أكملت الدرس بنجاح");
         stopProgressTracking(); // Stop tracking once completed
       }
     } catch (error: any) {
